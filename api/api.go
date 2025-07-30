@@ -8,7 +8,7 @@ import (
     "github.com/joho/godotenv"
 )
 const loadSize = 500  
-func GetAllCourses(quarter int) ([]Class, error) {
+func GetAllCourses(quarter int, client *http.Client) ([]Class, error) {
     err := godotenv.Load()
     if err != nil   {
         return nil, err
@@ -27,7 +27,6 @@ func GetAllCourses(quarter int) ([]Class, error) {
     for {
         parameter.Set("pageNumber", strconv.Itoa(pageCount))
         url := baseURL + "?" + parameters.Encode()
-        client := &http.Client()
         req, err := http.NewRequest("GET", url, nil)
         if err != nil  {
             return nil, err 

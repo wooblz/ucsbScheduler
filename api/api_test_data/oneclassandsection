@@ -1,0 +1,79 @@
+{
+  "pageNumber": 1,
+  "pageSize": 50,
+  "total": 1,
+  "classes": [
+    {
+      "quarter": "20251",
+      "courseId": "CMPSC     5A ",
+      "title": "INTRO DATA SCI 1",
+      "contactHours": 30,
+      "description": "Introduction to data science methods and Python programming language for st udents with little to no experience in the subjects. Topics include foundat ional programming concepts, problem-solving strategies and code design, and data science concepts as table operations, exploratory data analysis, basi c probability.",
+      "college": "ENGR",
+      "objLevelCode": "U",
+      "subjectArea": "CMPSC   ",
+      "unitsFixed": 4,
+      "unitsVariableHigh": null,
+      "unitsVariableLow": null,
+      "delayedSectioning": null,
+      "inProgressCourse": null,
+      "gradingOption": "L",
+      "instructionType": "LEC",
+      "instructionTypeSecondary": "DIS",
+      "onLineCourse": false,
+      "deptCode": "CMPSC",
+      "generalEducation": [
+        {
+          "geCode": "C  ",
+          "geCollege": "L&S "
+        },
+        {
+          "geCode": "QNT",
+          "geCollege": "L&S "
+        }
+      ],
+      "classSections": [
+        {
+          "enrollCode": "07070",
+          "section": "0100",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 69,
+          "maxEnroll": 200,
+          "secondaryStatus": "R",
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "-CMPSC",
+          "restrictionMajorPass": null,
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "1610",
+              "building": "BRDA",
+              "roomCapacity": 286,
+              "days": "M W    ",
+              "beginTime": "15:30",
+              "endTime": "16:45"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "TANNA A A",
+              "functionCode": "Teaching and in charge"
+            },
+            {
+              "instructor": "CONRAD P T",
+              "functionCode": "Teaching and in charge"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
