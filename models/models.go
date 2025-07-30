@@ -11,7 +11,7 @@ type Class struct  {
     ClassSections []Section `json:"classSections"`
 }
 type Section struct  {
-    TimeLocations []TimeLocation `json:"timeLocations`
+    TimeLocations []TimeLocation `json:"timeLocations"`
 }
 type TimeLocation struct  {
     Room         string `json:"room"`

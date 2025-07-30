@@ -6,18 +6,19 @@ import (
     "strconv"
     "encoding/json"
     "os"
+    "math"
     "github.com/wooblz/ucsbScheduler/models"
     "github.com/joho/godotenv"
 )
-const loadSize = 500  
-func GetAllCourses(quarter int, client *http.Client) ([]Class, error) {
-    err := godotenv.Load()
+const loadSize = 500
+//"https://api.ucsb.edu/academics/curriculums/v3/classes/search"
+func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.Class, error) {
+    err := godotenv.Load("../.env")
     if err != nil   {
         return nil, err
     }
     api_key := os.Getenv("API_KEY")
 
-    baseURL := "https://api.ucsb.edu/academics/curriculums/v3/classes/search"
 
     parameters := url.Values{}
     parameters.Add("quarter",strconv.Itoa(quarter))
@@ -25,9 +26,9 @@ func GetAllCourses(quarter int, client *http.Client) ([]Class, error) {
     parameters.Add("includeClassSections", "true")
 
     pageCount := 1
-    var sol []Class
+    var sol []models.Class
     for {
-        parameter.Set("pageNumber", strconv.Itoa(pageCount))
+        parameters.Set("pageNumber", strconv.Itoa(pageCount))
         url := baseURL + "?" + parameters.Encode()
         req, err := http.NewRequest("GET", url, nil)
         if err != nil  {
@@ -42,14 +43,14 @@ func GetAllCourses(quarter int, client *http.Client) ([]Class, error) {
             return nil, err
         }
         defer response.Body.Close()
-        var result partialApi
-        err = json.NewDecoder(response.Body).Decode(&response)
+        var result models.PartialApi
+        err = json.NewDecoder(response.Body).Decode(&result)
         if err != nil  {
             return nil, err
         }
-        sol.Append(sol,result.Classes)
+        sol = append(sol,result.Classes...)
         pageCount++
-        if result.Total < loadSize {
+        if math.Ceil(float64(result.Total)/float64(loadSize)) < float64(pageCount) {
             break
         }
     }

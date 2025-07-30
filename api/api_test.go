@@ -1,10 +1,12 @@
-package api_test
+package api
 
 import  (
     "testing"
     "net/http/httptest"
     "os"
-    "github.com/wooblz/ucsbScheduler/models"
+    "net/http"
+    "io"
+    //"github.com/wooblz/ucsbScheduler/models"
     
 )
 
@@ -20,11 +22,11 @@ func TestAPI(t *testing.T)  {
         }))
         defer server.Close()
         client := server.Client()
-        got, err := GetAllCourse(20251, client)
+        got, err := GetAllCourses(20251, client, server.URL)
         if err != nil  {
             t.Fatalf("Failed to get course: %v", err)
         }
-        class := got.Classes[0]
+        class := got[0]
         assertEqual(t, "CourseID", class.CourseID, "CMPSC     5A ")
         assertEqual(t, "Title", class.Title, "INTRO DATA SCI 1")
         assertEqual(t, "SubjectArea", class.SubjectArea, "CMPSC   ")
