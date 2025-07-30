@@ -4,7 +4,9 @@ import (
     "net/http"
     "net/url"
     "strconv"
-    "github.com/wooblz/ucsbScheduler/models.go"
+    "encoding/json"
+    "os"
+    "github.com/wooblz/ucsbScheduler/models"
     "github.com/joho/godotenv"
 )
 const loadSize = 500  
@@ -50,6 +52,6 @@ func GetAllCourses(quarter int, client *http.Client) ([]Class, error) {
         if result.Total < loadSize {
             break
         }
-        return sol, nil
     }
+    return sol, nil
 }
