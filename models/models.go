@@ -1,6 +1,7 @@
 package models
 
 type PartialApi struct {
+    Message string `json:"message"`
     Total int `json:"total"`
     Classes []Class `json:"classes"`
 }
