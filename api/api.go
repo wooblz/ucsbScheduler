@@ -7,6 +7,7 @@ import (
     "encoding/json"
     "os"
     "math"
+    "errors"
     "github.com/wooblz/ucsbScheduler/models"
     "github.com/joho/godotenv"
 )
@@ -50,6 +51,9 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
         err = json.NewDecoder(response.Body).Decode(&result)
         if err != nil  {
             return nil, err
+        }
+        if(result.Message != "")  {
+            return nil, errors.New(result.Message)
         }
         sol = append(sol,result.Classes...)
         pageCount++
