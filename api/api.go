@@ -13,6 +13,9 @@ import (
 const loadSize = 500
 //"https://api.ucsb.edu/academics/curriculums/v3/classes/search"
 func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.Class, error) {
+    if len(strconv.Itoa(quarter)) != 5  {
+        return nil, errors.New("Invalid quarter, YYYYQ format")
+    }
     err := godotenv.Load("../.env")
     if err != nil   {
         return nil, err
