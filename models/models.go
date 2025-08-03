@@ -22,6 +22,7 @@ type TimeLocation struct  {
 	EndTime      string `json:"endTime"`
 }
 type Final struct {
+    Message string `json:"message"`
 	HasFinals bool   `json:"hasFinals"`
 	Comments  string `json:"comments"`
 	ExamDay   string `json:"examDay"`
