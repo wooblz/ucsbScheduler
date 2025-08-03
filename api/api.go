@@ -11,7 +11,7 @@ import (
     "github.com/wooblz/ucsbScheduler/models"
     "github.com/joho/godotenv"
 )
-const loadSize = 500
+var loadSize = 500
 //"https://api.ucsb.edu/academics/curriculums/v3/classes/search"
 func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.Class, error) {
     if len(strconv.Itoa(quarter)) != 5  {
@@ -52,7 +52,10 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
         if err != nil  {
             return nil, err
         }
-        if(result.Message != "")  {
+        if result.Total == 0  {
+            break
+        }
+        if result.Message != ""  {
             return nil, errors.New(result.Message)
         }
         sol = append(sol,result.Classes...)

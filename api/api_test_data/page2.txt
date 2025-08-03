@@ -1,0 +1,65 @@
+{
+  "pageNumber": 2,
+  "pageSize": 3,
+  "total": 4,
+  "classes": [
+    {
+      "quarter": "20251",
+      "courseId": "MATH CS 101A ",
+      "title": "PROBLEM SOLVING I",
+      "contactHours": 30,
+      "description": "Discussion and solution of nonroutine mathematical problems related with different problem-solving techniques. Possible topics are: Pigeonhole principle,   use of invariants and symmetries in problem solving, coloring arguments, parity,   recursive arguments, extreme principle, inclusion-exclusion principle.",
+      "college": "CRST",
+      "objLevelCode": "U",
+      "subjectArea": "MATH CS ",
+      "unitsFixed": null,
+      "unitsVariableHigh": 4,
+      "unitsVariableLow": 1,
+      "delayedSectioning": null,
+      "inProgressCourse": null,
+      "gradingOption": "P",
+      "instructionType": "SEM",
+      "instructionTypeSecondary": null,
+      "onLineCourse": false,
+      "deptCode": "CRSTU",
+      "generalEducation": [],
+      "classSections": [
+        {
+          "enrollCode": "53991",
+          "section": "0100",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 16,
+          "maxEnroll": 20,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+MATCS",
+          "restrictionMajorPass": null,
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "164B",
+              "building": "CRST",
+              "roomCapacity": null,
+              "days": " T R   ",
+              "beginTime": "14:00",
+              "endTime": "15:15"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "BUENO CACHADI",
+              "functionCode": "Teaching and in charge"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,543 @@
+{
+  "pageNumber": 1,
+  "pageSize": 3,
+  "total": 4,
+  "classes": [
+    {
+      "quarter": "20251",
+      "courseId": "CMPSC    16  ",
+      "title": "PROBLEM SOLVING I",
+      "contactHours": 30,
+      "description": "Fundamental building blocks for solving problems using computers. Topics in clude basic computer organization and programming constructs:  memory CPU, binary arithmetic, variables, expressions, statements, conditionals, iterat ion, functions, parameters, recursion, primitive and composite data types, and basic operating system and debugging tools.",
+      "college": "ENGR",
+      "objLevelCode": "U",
+      "subjectArea": "CMPSC   ",
+      "unitsFixed": 4,
+      "unitsVariableHigh": null,
+      "unitsVariableLow": null,
+      "delayedSectioning": null,
+      "inProgressCourse": null,
+      "gradingOption": "L",
+      "instructionType": "LEC",
+      "instructionTypeSecondary": "DIS",
+      "onLineCourse": false,
+      "deptCode": "CMPSC",
+      "generalEducation": [],
+      "classSections": [
+        {
+          "enrollCode": "07336",
+          "section": "0100",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 169,
+          "maxEnroll": 175,
+          "secondaryStatus": "R",
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPSC+CMPEN+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "1101",
+              "building": "ILP",
+              "roomCapacity": 175,
+              "days": "M W    ",
+              "beginTime": "14:00",
+              "endTime": "15:15"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "MAJEDI M",
+              "functionCode": "Teaching and in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07344",
+          "section": "0101",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 32,
+          "maxEnroll": 35,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPSC+CMPEN+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "09:00",
+              "endTime": "09:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "KIM G",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07351",
+          "section": "0102",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 34,
+          "maxEnroll": 35,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPSC+CMPEN+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "10:00",
+              "endTime": "10:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "KIM G",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07369",
+          "section": "0103",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 34,
+          "maxEnroll": 35,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPSC+CMPEN+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "11:00",
+              "endTime": "11:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "NG J S",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07377",
+          "section": "0104",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 33,
+          "maxEnroll": 35,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPSC+CMPEN+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "12:00",
+              "endTime": "12:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "NG J S",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07385",
+          "section": "0105",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 36,
+          "maxEnroll": 35,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPSC+CMPEN+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "13:00",
+              "endTime": "13:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "LI J J",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "quarter": "20251",
+      "courseId": "CMPSC    24  ",
+      "title": "PROBLEM SOLVING II",
+      "contactHours": 30,
+      "description": "Intermediate building blocks for solving problems using computers. Topics i nclude intermediate object-oriented programming, data structures, object-or iented design, algorithms for manipulating these data structures and their run-time analyses. Data structures introduced include stacks, queues, lists , trees, and sets.",
+      "college": "ENGR",
+      "objLevelCode": "U",
+      "subjectArea": "CMPSC   ",
+      "unitsFixed": 4,
+      "unitsVariableHigh": null,
+      "unitsVariableLow": null,
+      "delayedSectioning": null,
+      "inProgressCourse": null,
+      "gradingOption": "L",
+      "instructionType": "LEC",
+      "instructionTypeSecondary": "DIS",
+      "onLineCourse": false,
+      "deptCode": "CMPSC",
+      "generalEducation": [],
+      "classSections": [
+        {
+          "enrollCode": "07450",
+          "section": "0100",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 132,
+          "maxEnroll": 150,
+          "secondaryStatus": "R",
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPEN+PRCME+CMPSC+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "1701",
+              "building": "TD-W",
+              "roomCapacity": 150,
+              "days": "M W    ",
+              "beginTime": "11:00",
+              "endTime": "12:15"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "BURK K T",
+              "functionCode": "Teaching and in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07468",
+          "section": "0101",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 30,
+          "maxEnroll": 30,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPEN+PRCME+CMPSC+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "14:00",
+              "endTime": "14:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "KHAN P",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07476",
+          "section": "0102",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 24,
+          "maxEnroll": 30,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPEN+PRCME+CMPSC+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "15:00",
+              "endTime": "15:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "KHAN P",
+              "functionCode": "Teaching but not in charge"
+            },
+            {
+              "instructor": "ZHANG JINGHAN",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07484",
+          "section": "0103",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 31,
+          "maxEnroll": 30,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPEN+PRCME+CMPSC+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "16:00",
+              "endTime": "16:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "YAO G",
+              "functionCode": "Teaching but not in charge"
+            },
+            {
+              "instructor": "ZHANG JINGHAN",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07492",
+          "section": "0104",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 29,
+          "maxEnroll": 30,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPEN+PRCME+CMPSC+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "17:00",
+              "endTime": "17:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "YAO G",
+              "functionCode": "Teaching but not in charge"
+            },
+            {
+              "instructor": "OZAWA BURNS B",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "07500",
+          "section": "0105",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 18,
+          "maxEnroll": 30,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+CMPEN+PRCME+CMPSC+EE",
+          "restrictionMajorPass": "12",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "3525",
+              "building": "PHELP",
+              "roomCapacity": null,
+              "days": "   R   ",
+              "beginTime": "18:00",
+              "endTime": "18:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "OZAWA BURNS B",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "quarter": "20251",
+      "courseId": "MATH    190PS",
+      "title": "PROBLEM SOLVING",
+      "contactHours": 30,
+      "description": "The Problem Solving in Mathematics course is designed to impart students wi th advanced problem-solving techniques and strategies in mathematics. Stude nts will explore a diverse range of methods, including the application of p arity, coloring, ordering, extremality, symmetry, invariants among others. The course emphasizes critical and creative thinking, allowing students to tackle complex mathematical challenges. Through collaboration and presentat ion exercises, students develop effective communication skills. The goal is to equip students with the basic abilities for research in mathematics.",
+      "college": "L&S",
+      "objLevelCode": "U",
+      "subjectArea": "MATH    ",
+      "unitsFixed": 4,
+      "unitsVariableHigh": null,
+      "unitsVariableLow": null,
+      "delayedSectioning": null,
+      "inProgressCourse": null,
+      "gradingOption": null,
+      "instructionType": "LEC",
+      "instructionTypeSecondary": null,
+      "onLineCourse": false,
+      "deptCode": "MATH ",
+      "generalEducation": [],
+      "classSections": [
+        {
+          "enrollCode": "55178",
+          "section": "0100",
+          "session": null,
+          "classClosed": null,
+          "courseCancelled": null,
+          "gradingOptionCode": null,
+          "enrolledTotal": 18,
+          "maxEnroll": 45,
+          "secondaryStatus": null,
+          "departmentApprovalRequired": false,
+          "instructorApprovalRequired": false,
+          "restrictionLevel": null,
+          "restrictionMajor": "+AMATH+MATCS+MATH +FINMS+MTHSC",
+          "restrictionMajorPass": "1",
+          "restrictionMinor": null,
+          "restrictionMinorPass": null,
+          "concurrentCourses": [],
+          "timeLocations": [
+            {
+              "room": "1508",
+              "building": "PHELP",
+              "roomCapacity": 48,
+              "days": "M W F  ",
+              "beginTime": "09:00",
+              "endTime": "09:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "BUENO CACHADI",
+              "functionCode": "Teaching and in charge"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import  (
     "net/http"
     "io"
     "reflect"
+    "strconv"
     "github.com/wooblz/ucsbScheduler/models"
     
 )
@@ -46,6 +47,42 @@ func TestAPI(t *testing.T)  {
             t.Fatalf("Failed to get course: %v", err)
         }
         assertClassesEqual(t, got, Solution2)
+    })
+    t.Run("multi page test", func(t *testing.T)  {
+        old := loadSize
+        loadSize = 3
+        defer func() {loadSize = old}()
+
+        
+        server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("Content-Type", "application/json")
+            pageNumber := r.URL.Query().Get("pageNumber")
+            page,err := strconv.Atoi(pageNumber)
+            if err != nil  {
+                t.Fatalf("Invalid page number %v", err)
+            }
+            switch page  {
+                case 1:
+                    data,err := os.ReadFile("api_test_data/page1.txt")
+                    if err != nil   {
+                        t.Fatalf("Failed to open file: %v", err)
+                    }
+                    io.WriteString(w, string(data))
+                case 2:
+                    data,err := os.ReadFile("api_test_data/page2.txt")
+                    if err != nil   {
+                        t.Fatalf("Failed to open file: %v", err)
+                    }
+                    io.WriteString(w, string(data))
+            }
+        }))
+        defer server.Close()
+        client := server.Client()
+        got, err := GetAllCourses(20251, client, server.URL)
+        if err != nil  {
+            t.Fatalf("Failed to get course: %v", err)
+        }
+        assertClassesEqual(t, got, Solution3)
     })
 
 }
