@@ -1,0 +1,8 @@
+{
+  "message": "The request is invalid.",
+  "modelState": {
+    "quarter": [
+      "Argument 'quarter' (341234312) must be a quarter in YYYYQ format."
+    ]
+  }
+}

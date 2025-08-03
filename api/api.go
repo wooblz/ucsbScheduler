@@ -52,11 +52,11 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
         if err != nil  {
             return nil, err
         }
-        if result.Total == 0  {
-            break
-        }
         if result.Message != ""  {
             return nil, errors.New(result.Message)
+        }
+        if result.Total == 0  {
+            break
         }
         sol = append(sol,result.Classes...)
         pageCount++

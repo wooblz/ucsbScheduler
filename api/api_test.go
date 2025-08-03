@@ -84,6 +84,41 @@ func TestAPI(t *testing.T)  {
         }
         assertClassesEqual(t, got, Solution3)
     })
+    t.Run("empty query", func(t *testing.T)  {
+        data, err := os.ReadFile("api_test_data/emptyquery")
+        if err != nil  {
+            t.Fatalf("Failed to open file: %v", err)
+        }
+        server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)  {
+            w.Header().Set("Content-Type", "application/json")
+            io.WriteString(w, string(data))
+        }))
+        defer server.Close()
+        client := server.Client()
+        got, err := GetAllCourses(20251, client, server.URL)
+        if err  != nil  {
+            t.Fatalf("Failed to get courses: %v", err)
+        }
+        if len(got) != 0  {
+            t.Errorf("Empty Query Failed")
+        }
+    })
+    t.Run("error query", func(t *testing.T)  {
+        data, err := os.ReadFile("api_test_data/errorquery")
+        if err != nil  {
+            t.Fatalf("Failed to open file: %v", err)
+        }
+        server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)  {
+            w.Header().Set("Content-Type", "application/json")
+            io.WriteString(w, string(data))
+        }))
+        defer server.Close()
+        client := server.Client()
+        _, err = GetAllCourses(20251, client, server.URL)
+        if err == nil  {
+            t.Fatalf("Failed to cause error")
+        }
+    })
 
 }
 func assertClassesEqual(t *testing.T, got, want []models.Class) {
