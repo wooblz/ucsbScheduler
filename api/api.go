@@ -8,6 +8,7 @@ import (
     "os"
     "math"
     "errors"
+    "fmt"
     "github.com/wooblz/ucsbScheduler/models"
     "github.com/joho/godotenv"
 )
@@ -65,4 +66,48 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
         }
     }
     return sol, nil
+}
+
+//https://api.ucsb.edu/academics/curriculums/v3/finals
+func GetFinal(quarter int, courseID string, baseURL string, client *http.Client) (models.Final,error) {
+    if len(strconv.Itoa(quarter)) != 5  {
+        return models.Final{}, errors.New("Invalid quarter, YYYYQ format")
+    }
+    err := godotenv.Load("../.env")
+    if err != nil   {
+        return models.Final{}, err
+    }
+    api_key := os.Getenv("API_KEY")
+    parameters := url.Values{}
+    parameters.Add("quarter",strconv.Itoa(quarter))
+    parameters.Add("enrollCode", courseID)
+
+    url := baseURL + "?" + parameters.Encode()
+    req,err := http.NewRequest("GET", url, nil)
+    if err !=  nil  {
+        return models.Final{}, err
+    }
+
+    req.Header.Set("Accept", "application/json")
+    req.Header.Set("UCSB-API-version", "3.0")
+    req.Header.Set("UCSB-API-key", api_key)
+
+    response, err := client.Do(req)
+    if err != nil {
+        return models.Final{}, err
+    }
+    defer response.Body.Close()
+    var result models.Final
+        
+    err = json.NewDecoder(response.Body).Decode(&result)
+    if err != nil  {
+        return models.Final{}, err
+    }
+    if result.Message != ""  {
+        return models.Final{}, errors.New(result.Message)
+    }
+    if result.ExamDay == ""  {
+        return models.Final{}, errors.New(fmt.Sprintf("Could not find final for courseID: %s", courseID))
+    }
+    return result, nil
 }
