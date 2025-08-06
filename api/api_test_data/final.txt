@@ -1,0 +1,8 @@
+{
+  "hasFinals": true,
+  "comments": "",
+  "examDay": "R",
+  "examDate": "20250320",
+  "beginTime": "12:00",
+  "endTime": "15:00"
+}

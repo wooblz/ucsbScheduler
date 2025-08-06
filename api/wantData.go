@@ -222,3 +222,11 @@ var Solution3 = []models.Class{
         },
     },
 }
+var FinalSolution1 = models.Final {
+    HasFinals: true,
+    Comments:  "",
+    ExamDay:   "R",
+    ExamDate:  "20250320",
+    BeginTime: "12:00",
+    EndTime:   "15:00",
+}

@@ -1,5 +1,6 @@
 package api
 
+
 import  (
     "testing"
     "net/http/httptest"
@@ -11,8 +12,42 @@ import  (
     "github.com/wooblz/ucsbScheduler/models"
     
 )
-
-func TestAPI(t *testing.T)  {
+func TestFinalAPI(t *testing.T)  {
+    t.Run("final", func(t *testing.T)  {
+        data,err  := os.ReadFile("api_test_data/final.txt")
+        if err != nil  {
+            t.Fatalf("Failed to open file: %v", err)  
+        }
+        server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)  {
+            w.Header().Set("Content-Type", "application/json")
+            io.WriteString(w, string(data))
+        }))
+        defer server.Close()
+        client := server.Client()
+        got, err := GetFinal(20251,"test",server.URL, client)
+        if err != nil  {
+            t.Fatalf("Failed to get final: %v", err)
+        }
+        assertFinalEqual(t, got, FinalSolution1)
+    })
+    t.Run("can't find final", func(t *testing.T)  {
+        data,err  := os.ReadFile("api_test_data/finalnull")
+        if err != nil  {
+            t.Fatalf("Failed to open file: %v", err)  
+        }
+        server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)  {
+            w.Header().Set("Content-Type", "application/json")
+            io.WriteString(w, string(data))
+        }))
+        defer server.Close()
+        client := server.Client()
+        _, err = GetFinal(20251,"test",server.URL, client)
+        if err == nil  {
+            t.Fatalf("Failed to cause error: %v", err)
+        }
+    })
+}
+func TestClassAPI(t *testing.T)  {
     t.Run("test single input", func (t *testing.T)  {
         data,err := os.ReadFile("api_test_data/oneclassandsection")
         if err != nil   {
@@ -120,6 +155,26 @@ func TestAPI(t *testing.T)  {
         }
     })
 
+}
+func assertFinalEqual(t *testing.T, got, want models.Final)  {
+    if got.HasFinals != want.HasFinals {
+        t.Errorf("HasFinals mismatch: got %t, want %t", got.HasFinals, want.HasFinals)
+    }
+    if got.Comments != want.Comments {
+        t.Errorf("Comments mismatch: got %q, want %q", got.Comments, want.Comments)
+    }
+    if got.ExamDay != want.ExamDay {
+        t.Errorf("ExamDay mismatch: got %q, want %q", got.ExamDay, want.ExamDay)
+    }
+    if got.ExamDate != want.ExamDate {
+        t.Errorf("ExamDate mismatch: got %q, want %q", got.ExamDate, want.ExamDate)
+    }
+    if got.BeginTime != want.BeginTime {
+        t.Errorf("BeginTime mismatch: got %q, want %q", got.BeginTime, want.BeginTime)
+    }
+    if got.EndTime != want.EndTime {
+        t.Errorf("EndTime mismatch: got %q, want %q", got.EndTime, want.EndTime)
+    }
 }
 func assertClassesEqual(t *testing.T, got, want []models.Class) {
     if len(got) != len(want) {
