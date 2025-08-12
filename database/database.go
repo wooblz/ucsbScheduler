@@ -1,12 +1,43 @@
 package database
 
 import (
+    "fmt"
+    "log"
+    "os"
     "database/sql"
     _ "github.com/lib/pq"
     "github.com/wooblz/ucsbScheduler/models"
+    "github.com/joho/godotenv"
 )
 
 func CreateTable() error  {
+    err := godotenv.Load()
+    if err != nil   {
+        return err
+    }
+    conStr := fmt.Sprintf(
+        "user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
+        os.Getenv("DB_USER"),
+        os.Getenv("DB_PASSWORD"),
+        os.Getenv("DB_HOST"),
+        os.Getenv("DB_PORT"),
+        os.Getenv("DB_NAME"),
+        os.Getenv("DB_SSLMODE"),
+    )
+    db, err := sql.Open("postgres", conStr)
+    defer db.Close()
+    if err != nil  {
+        log.Printf("Unable to open server: %v", err)
+        return err 
+    }  else  {
+        log.Println("Server Opened")
+    }
+    connectivity := db.Ping()
+    if connectivity != nil  {
+        log.Printf("Unable to ping server: %v", err)
+    }  else  {
+        log.Println("Server pinged")
+    }
     TableCreate := `
         CREATE TABLE classes (
             course_id TEXT PRIMARY KEY, 
@@ -19,9 +50,20 @@ func CreateTable() error  {
         );
         CREATE TABLE time_locations (
             id SERIAL PRIMARY KEY,
-            section_id INT REFERENCE
-        )
+            section_id INT REFERENCE sections(id) ON DELETE CASCADE,
+            room TEXT,
+            building TEXT,
+            days TEXT,
+            begin_time TIME,
+            end_time TIME
+        );
     `
+    _, err = db.Exec(TableCreate)
+    if err != nil  {
+        log.Printf("Failed to create table: %v", err)
+        return err
+    }
+    return nil
 }
 func InsertAllClasses(classes []models.Class) error  {
 
