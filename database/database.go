@@ -15,16 +15,8 @@ func CreateTable() error  {
     if err != nil   {
         return err
     }
-    conStr := fmt.Sprintf(
-        "user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
-        os.Getenv("DB_USER"),
-        os.Getenv("DB_PASSWORD"),
-        os.Getenv("DB_HOST"),
-        os.Getenv("DB_PORT"),
-        os.Getenv("DB_NAME"),
-        os.Getenv("DB_SSLMODE"),
-    )
-    db, err := sql.Open("postgres", conStr)
+    db_url := os.Getenv("DB_URL")
+    db, err := sql.Open("postgres", db_url)
     defer db.Close()
     if err != nil  {
         log.Printf("Unable to open server: %v", err)
