@@ -11,19 +11,20 @@ import (
 )
 
 func CreateTable() error  {
-    err := godotenv.Load()
+    err := godotenv.Load("../.env")
     if err != nil   {
-        return err
+        return nil, err
     }
+
     db_url := os.Getenv("DB_URL")
     db, err := sql.Open("postgres", db_url)
-    defer db.Close()
     if err != nil  {
         log.Printf("Unable to open server: %v", err)
         return err 
     }  else  {
         log.Println("Server Opened")
     }
+    defer db.Close()
     connectivity := db.Ping()
     if connectivity != nil  {
         log.Printf("Unable to ping server: %v", err)
@@ -34,7 +35,7 @@ func CreateTable() error  {
         CREATE TABLE classes (
             course_id TEXT PRIMARY KEY, 
             title TEXT NOT NULL,
-            subject_area TEXT NOT NULL,
+            subject_area TEXT NOT NULL
         );
         CREATE TABLE sections (
             id SERIAL PRIMARY KEY,
@@ -42,7 +43,7 @@ func CreateTable() error  {
         );
         CREATE TABLE time_locations (
             id SERIAL PRIMARY KEY,
-            section_id INT REFERENCE sections(id) ON DELETE CASCADE,
+            section_id INT REFERENCES sections(id) ON DELETE CASCADE,
             room TEXT,
             building TEXT,
             days TEXT,
