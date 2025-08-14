@@ -89,12 +89,16 @@ func InsertAllClasses(classes []models.Class) error  {
                 }
             }
         }
-
     }
+    return nil
 }
 
 func ResetDB() error {
-
+    _, err := db.Exec("TRUNCATE classes RESTART IDENTITY CASCADE")
+    if err != nil  {
+        return err
+    }
+    return nil
 }
 
 func 
