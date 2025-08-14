@@ -31,6 +31,7 @@ func CreateTable() error  {
             course_id TEXT PRIMARY KEY, 
             title TEXT NOT NULL,
             subject_area TEXT NOT NULL
+            tsv tsvector
         );
         CREATE TABLE sections (
             id SERIAL PRIMARY KEY,
@@ -90,6 +91,7 @@ func InsertAllClasses(classes []models.Class) error  {
             }
         }
     }
+    db.Exec("UPDATE classes SET tsv = to_tsvector('english', coalesce(title,''))")
     return nil
 }
 
@@ -101,4 +103,6 @@ func ResetDB() error {
     return nil
 }
 
-func 
+func QueryTitle(Query string) (classes []Class, error) {
+
+}
