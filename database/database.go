@@ -13,24 +13,19 @@ import (
 func CreateTable() error  {
     err := godotenv.Load("../.env")
     if err != nil   {
-        return nil, err
+        return err
     }
 
     db_url := os.Getenv("DB_URL")
     db, err := sql.Open("postgres", db_url)
     if err != nil  {
-        log.Printf("Unable to open server: %v", err)
         return err 
-    }  else  {
-        log.Println("Server Opened")
     }
     defer db.Close()
     connectivity := db.Ping()
     if connectivity != nil  {
-        log.Printf("Unable to ping server: %v", err)
-    }  else  {
-        log.Println("Server pinged")
-    }
+        return fmt.Errorf("Unable to ping server: %v", err)
+    }  
     TableCreate := `
         CREATE TABLE classes (
             course_id TEXT PRIMARY KEY, 
@@ -53,13 +48,49 @@ func CreateTable() error  {
     `
     _, err = db.Exec(TableCreate)
     if err != nil  {
-        log.Printf("Failed to create table: %v", err)
         return err
     }
     return nil
 }
 func InsertAllClasses(classes []models.Class) error  {
+    insert_class,err := db.Prepare("INSERT INTO classes VALUES ($1, $2, $3)")
+    if err != nil {
+        return err
+    }
+    defer insert_class.Close()
+    insert_section,err  := db.Prepare("INSERT INTO section (course_id) VALUES ($1) RETURNING id")
+    if err != nil  {
+        return err
+    }
+    defer insert_section.Close()
+    insert_time, err := db.Prepare("INSERT INTO time_locations 
+        (section_id, room, building, days, begin_time, end_time) 
+        VALUES ($1, $2, $3, $4, $5, $6)"
+    )
+    if  err != nil  {
+        return err
+    }
+    defer insert_time.Close()
+    for _, v := range classes {
+        _, err = insert_class.Exec(v.CourseID, v.Title, v.SubjectArea)
+        if  err != nil  {
+            return err 
+        }
+        for _, w := range v.ClassSections  {
+            var SectionID int
+            _, err = insert_section.QueryRow(v.CourseID).Scan(&SectionID)
+            if err != nil  {
+                return err
+            }
+            for _, x := range w.TimeLocataions  {
+                _, err = insert_time.Exec(SectionID, x.Room,x.Building, x.Days, x.BeginTime, x.EndTime)
+                if err != nil  {
+                    return err
+                }
+            }
+        }
 
+    }
 }
 
 func ResetDB() error {
