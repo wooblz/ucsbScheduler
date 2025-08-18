@@ -2,12 +2,13 @@ package database
 
 import (
     "testing"
+    "fmt"
     "os"
     "log"
-    "database/sql"
+    //"database/sql"
     _ "github.com/lib/pq"
     //"github.com/wooblz/ucsbScheduler/models"
-    "github.com/joho/godotenv"
+    //"github.com/joho/godotenv"
 )
 
 func TestMain(m *testing.M)  {
@@ -31,11 +32,9 @@ func run(m *testing.M) (code int, err error)  {
     }
 
     defer func()  {
-        emptyTable, err := db.Exec("TRUNCATE TABLE test")
-        if emptyTableErr != nil {
-            return -1, fmt.Errorf("Failed to empty table: %v", err)
-        }
+        _, _ = db.Exec("TRUNCATE TABLE test")
         db.Close()
     }()
     return m.Run(), nil
+
 }

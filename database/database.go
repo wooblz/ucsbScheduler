@@ -3,6 +3,7 @@ package database
 import (
     "fmt"
     "os"
+    "strings"
     "encoding/json"
     "database/sql"
     _ "github.com/lib/pq"
@@ -10,25 +11,25 @@ import (
     "github.com/joho/godotenv"
 )
 
-func StartDB() (*sql.DB, error)  {
+func StartDB(name string) (*sql.DB, error)  {
     err := godotenv.Load("../.env")
     if err != nil   {
         return nil, err
     }
 
-    db_url := os.Getenv("DB_URL")
+    db_url := strings.TrimSpace(os.Getenv("TEST_DB_URL"))
     db, err := sql.Open("postgres", db_url)
     if err != nil  {
         return nil, err 
     }
     connectivity := db.Ping()
     if connectivity != nil  {
-        return nil, fmt.Errorf("Unable to ping server: %v", err)
+        return nil, fmt.Errorf("Unable to ping server: %v", connectivity)
     }  
     return db, nil
 }
 func CreateTable() error  {
-    db, err := StartDB()
+    db, err := StartDB("DB_URL")
     if err != nil {
         return err
     }
@@ -37,7 +38,7 @@ func CreateTable() error  {
         CREATE TABLE classes (
             course_id TEXT PRIMARY KEY, 
             title TEXT NOT NULL,
-            subject_area TEXT NOT NULL
+            subject_area TEXT NOT NULL,
             tsv tsvector
         );
         CREATE TABLE sections (
@@ -61,7 +62,7 @@ func CreateTable() error  {
     return nil
 }
 func InsertAllClasses(classes []models.Class) error  {
-    db, err := StartDB()
+    db, err := StartDB("DB_URL")
     if err != nil  {
         return err
     }
@@ -104,12 +105,12 @@ func InsertAllClasses(classes []models.Class) error  {
     }
     db.Exec(`SET tsv = 
         setweight(to_tsvector('english', coalesce(course_id, '')), 'A') ||
-        setweight(to_tsivector('english', coalesce(title, '')), 'B')`)
+        setweight(to_tsvector('english', coalesce(title, '')), 'B')`)
     return nil
 }
 
 func ResetDB() error {
-    db, err := StartDB()
+    db, err := StartDB("DB_URL")
     if err != nil  {
         return err
     }
@@ -122,7 +123,7 @@ func ResetDB() error {
 }
 
 func QueryTitle(statement string) ([]models.Class, error) {
-    db, err := StartDB()
+    db, err := StartDB("DB_URL")
     if err != nil  {
         return nil, err
     }
