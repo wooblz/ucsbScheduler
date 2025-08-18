@@ -3,7 +3,7 @@ package database
 import (
     "fmt"
     "os"
-    "strings"
+    //"strings"
     "encoding/json"
     "database/sql"
     _ "github.com/lib/pq"
@@ -11,13 +11,13 @@ import (
     "github.com/joho/godotenv"
 )
 
+const url string = "TEST_DB_URL"
 func StartDB(name string) (*sql.DB, error)  {
     err := godotenv.Load("../.env")
     if err != nil   {
         return nil, err
     }
-
-    db_url := strings.TrimSpace(os.Getenv("TEST_DB_URL"))
+    db_url := os.Getenv(name)
     db, err := sql.Open("postgres", db_url)
     if err != nil  {
         return nil, err 
@@ -29,23 +29,31 @@ func StartDB(name string) (*sql.DB, error)  {
     return db, nil
 }
 func CreateTable() error  {
-    db, err := StartDB("DB_URL")
+    db, err := StartDB(url)
     if err != nil {
         return err
     }
     defer db.Close()
-    TableCreate := `
-        CREATE TABLE classes (
+    _, err = db.Exec(`
+        CREATE TABLE IF NOT EXISTS classes (
             course_id TEXT PRIMARY KEY, 
             title TEXT NOT NULL,
             subject_area TEXT NOT NULL,
             tsv tsvector
-        );
-        CREATE TABLE sections (
+        )`)
+    if err != nil  {
+        return err
+    }
+    _, err = db.Exec(` 
+        CREATE TABLE IF NOT EXISTS sections (
             id SERIAL PRIMARY KEY,
             course_id TEXT REFERENCES classes(course_id) ON DELETE CASCADE
-        );
-        CREATE TABLE time_locations (
+        )`)
+    if err != nil  {
+        return err
+    }
+    _, err = db.Exec(`
+        CREATE TABLE IF NOT EXISTS time_locations (
             id SERIAL PRIMARY KEY,
             section_id INT REFERENCES sections(id) ON DELETE CASCADE,
             room TEXT,
@@ -53,16 +61,14 @@ func CreateTable() error  {
             days TEXT,
             begin_time TIME,
             end_time TIME
-        );
-    `
-    _, err = db.Exec(TableCreate)
+        )`)
     if err != nil  {
         return err
     }
     return nil
 }
 func InsertAllClasses(classes []models.Class) error  {
-    db, err := StartDB("DB_URL")
+    db, err := StartDB(url)
     if err != nil  {
         return err
     }
@@ -110,7 +116,7 @@ func InsertAllClasses(classes []models.Class) error  {
 }
 
 func ResetDB() error {
-    db, err := StartDB("DB_URL")
+    db, err := StartDB(url)
     if err != nil  {
         return err
     }
@@ -123,7 +129,7 @@ func ResetDB() error {
 }
 
 func QueryTitle(statement string) ([]models.Class, error) {
-    db, err := StartDB("DB_URL")
+    db, err := StartDB(url)
     if err != nil  {
         return nil, err
     }

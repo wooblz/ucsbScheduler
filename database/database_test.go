@@ -26,7 +26,7 @@ func TestMain(m *testing.M)  {
 
 func run(m *testing.M) (code int, err error)  {
     
-    db, err := StartDB("DB_TEST_URL")
+    db, err := StartDB("TEST_DB_URL")
     if err != nil  {
         return -1, fmt.Errorf("Failed to connect to db: %v", err)
     }
@@ -38,3 +38,4 @@ func run(m *testing.M) (code int, err error)  {
     return m.Run(), nil
 
 }
+
