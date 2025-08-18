@@ -2,30 +2,37 @@ package database
 
 import (
     "fmt"
-    "log"
     "os"
+    "encoding/json"
     "database/sql"
     _ "github.com/lib/pq"
     "github.com/wooblz/ucsbScheduler/models"
     "github.com/joho/godotenv"
 )
 
-func CreateTable() error  {
+func StartDB() (*sql.DB, error)  {
     err := godotenv.Load("../.env")
     if err != nil   {
-        return err
+        return nil, err
     }
 
     db_url := os.Getenv("DB_URL")
     db, err := sql.Open("postgres", db_url)
     if err != nil  {
-        return err 
+        return nil, err 
     }
-    defer db.Close()
     connectivity := db.Ping()
     if connectivity != nil  {
-        return fmt.Errorf("Unable to ping server: %v", err)
+        return nil, fmt.Errorf("Unable to ping server: %v", err)
     }  
+    return db, nil
+}
+func CreateTable() error  {
+    db, err := StartDB()
+    if err != nil {
+        return err
+    }
+    defer db.Close()
     TableCreate := `
         CREATE TABLE classes (
             course_id TEXT PRIMARY KEY, 
@@ -54,6 +61,11 @@ func CreateTable() error  {
     return nil
 }
 func InsertAllClasses(classes []models.Class) error  {
+    db, err := StartDB()
+    if err != nil  {
+        return err
+    }
+    defer db.Close()
     insert_class,err := db.Prepare("INSERT INTO classes VALUES ($1, $2, $3)")
     if err != nil {
         return err
@@ -64,10 +76,9 @@ func InsertAllClasses(classes []models.Class) error  {
         return err
     }
     defer insert_section.Close()
-    insert_time, err := db.Prepare("INSERT INTO time_locations 
+    insert_time, err := db.Prepare(`INSERT INTO time_locations 
         (section_id, room, building, days, begin_time, end_time) 
-        VALUES ($1, $2, $3, $4, $5, $6)"
-    )
+        VALUES ($1, $2, $3, $4, $5, $6)`)
     if  err != nil  {
         return err
     }
@@ -79,11 +90,11 @@ func InsertAllClasses(classes []models.Class) error  {
         }
         for _, w := range v.ClassSections  {
             var SectionID int
-            _, err = insert_section.QueryRow(v.CourseID).Scan(&SectionID)
+            err = insert_section.QueryRow(v.CourseID).Scan(&SectionID)
             if err != nil  {
                 return err
             }
-            for _, x := range w.TimeLocataions  {
+            for _, x := range w.TimeLocations  {
                 _, err = insert_time.Exec(SectionID, x.Room,x.Building, x.Days, x.BeginTime, x.EndTime)
                 if err != nil  {
                     return err
@@ -91,18 +102,75 @@ func InsertAllClasses(classes []models.Class) error  {
             }
         }
     }
-    db.Exec("UPDATE classes SET tsv = to_tsvector('english', coalesce(title,''))")
+    db.Exec(`SET tsv = 
+        setweight(to_tsvector('english', coalesce(course_id, '')), 'A') ||
+        setweight(to_tsivector('english', coalesce(title, '')), 'B')`)
     return nil
 }
 
 func ResetDB() error {
-    _, err := db.Exec("TRUNCATE classes RESTART IDENTITY CASCADE")
+    db, err := StartDB()
+    if err != nil  {
+        return err
+    }
+    defer db.Close()
+    _, err = db.Exec("TRUNCATE classes RESTART IDENTITY CASCADE")
     if err != nil  {
         return err
     }
     return nil
 }
 
-func QueryTitle(Query string) (classes []Class, error) {
-
+func QueryTitle(statement string) ([]models.Class, error) {
+    db, err := StartDB()
+    if err != nil  {
+        return nil, err
+    }
+    defer db.Close()
+    query_line, err := db.Prepare(`
+        SELECT 
+            c.course_id, 
+            c.title, 
+            c.subject_area,
+            json_agg(
+                json_build_object(
+                    'timeLocations', (
+                        SELECT json_agg(
+                            json_build_object(
+                                'room', tl.room,
+                                'building', tl.building,
+                                'days', tl.days,
+                                'beginTime', tl.begin_time,
+                                'endTime', tl.end_time
+                            )
+                        )
+                        FROM time_locations tl
+                        WHERE tl.section_id = s.id
+                    )
+                )
+            ) AS classSections
+        FROM classes c
+        LEFT JOIN sections s ON s.course_id = c.course_id
+        WHERE c.tsv @@ plainto_tsquery('english', $1)
+        GROUP BY c.course_id, c.title, c.subject_area;
+    `)
+    if err != nil  {
+        return nil, err
+    }
+    defer query_line.Close()
+    rows, err := query_line.Query(statement)
+    if err != nil {
+        return nil, err
+    }
+    var jsonData []byte
+    err = rows.Scan(&jsonData)
+    if err != nil  {
+        return nil, err
+    }
+    var classes []models.Class 
+    err = json.Unmarshal(jsonData,&classes)
+    if err != nil  {
+        return nil, err
+    } 
+    return classes, nil
 }

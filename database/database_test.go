@@ -6,7 +6,7 @@ import (
     "log"
     "database/sql"
     _ "github.com/lib/pq"
-    "github.com/wooblz/ucsbScheduler/models"
+    //"github.com/wooblz/ucsbScheduler/models"
     "github.com/joho/godotenv"
 )
 
@@ -24,8 +24,8 @@ func TestMain(m *testing.M)  {
 }
 
 func run(m *testing.M) (code int, err error)  {
-    db_url := os.Getenv("TEST_DB_URL")
-    db, err := sql.Open("postgres", db_url)
+    
+    db, err := StartDB("DB_TEST_URL")
     if err != nil  {
         return -1, fmt.Errorf("Failed to connect to db: %v", err)
     }
