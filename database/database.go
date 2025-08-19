@@ -3,7 +3,6 @@ package database
 import (
     "fmt"
     "os"
-    //"strings"
     "encoding/json"
     "database/sql"
     _ "github.com/lib/pq"
@@ -28,13 +27,8 @@ func StartDB(name string) (*sql.DB, error)  {
     }  
     return db, nil
 }
-func CreateTable() error  {
-    db, err := StartDB(url)
-    if err != nil {
-        return err
-    }
-    defer db.Close()
-    _, err = db.Exec(`
+func CreateTable(db *sql.DB) error  {
+    _, err := db.Exec(`
         CREATE TABLE IF NOT EXISTS classes (
             course_id TEXT PRIMARY KEY, 
             title TEXT NOT NULL,
@@ -67,12 +61,7 @@ func CreateTable() error  {
     }
     return nil
 }
-func InsertAllClasses(classes []models.Class) error  {
-    db, err := StartDB(url)
-    if err != nil  {
-        return err
-    }
-    defer db.Close()
+func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
     insert_class,err := db.Prepare("INSERT INTO classes VALUES ($1, $2, $3)")
     if err != nil {
         return err
@@ -115,25 +104,15 @@ func InsertAllClasses(classes []models.Class) error  {
     return nil
 }
 
-func ResetDB() error {
-    db, err := StartDB(url)
-    if err != nil  {
-        return err
-    }
-    defer db.Close()
-    _, err = db.Exec("TRUNCATE classes RESTART IDENTITY CASCADE")
+func ResetDB(db *sql.DB) error {
+    _, err := db.Exec("TRUNCATE classes RESTART IDENTITY CASCADE")
     if err != nil  {
         return err
     }
     return nil
 }
 
-func QueryTitle(statement string) ([]models.Class, error) {
-    db, err := StartDB(url)
-    if err != nil  {
-        return nil, err
-    }
-    defer db.Close()
+func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
     query_line, err := db.Prepare(`
         SELECT 
             c.course_id, 
