@@ -11,6 +11,7 @@ import (
 )
 
 const url string = "TEST_DB_URL"
+
 func StartDB(name string) (*sql.DB, error)  {
     err := godotenv.Load("../.env")
     if err != nil   {
@@ -105,7 +106,7 @@ func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
 }
 
 func ResetDB(db *sql.DB) error {
-    _, err := db.Exec("TRUNCATE classes RESTART IDENTITY CASCADE")
+    _, err := db.Exec("TRUNCATE TABLE classes RESTART IDENTITY CASCADE")
     if err != nil  {
         return err
     }

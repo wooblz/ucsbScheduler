@@ -7,7 +7,7 @@ import (
     "log"
     "database/sql"
     _ "github.com/lib/pq"
-    //"github.com/wooblz/ucsbScheduler/models"
+    "github.com/wooblz/ucsbScheduler/models"
     //"github.com/joho/godotenv"
 )
 
@@ -27,13 +27,12 @@ func run(m *testing.M) (code int, err error)  {
         return -1, fmt.Errorf("Failed to connect to db: %v", err)
     }
 
-    err := CreateTable()
+    err = CreateTable(db)
     if err != nil  {
         log.Println(err)
     }
-    i
     defer func()  {
-        _, _ = db.Exec("TRUNCATE TABLE test")
+        _, _ = db.Exec("TRUNCATE TABLE classes CASCADE RESTART IDENTITY;")
         db.Close()
     }()
     return m.Run(), nil
@@ -44,7 +43,6 @@ func TestInsertClass(t *testing.T)  {
     if err != nil  {
         t.Fatalf("Failed to insert classes: %v", err)
     }
-
 
     queryClass,err := db.Prepare(`SELECT course_id, title, subject_area FROM classes WHERE course_id = $1`)
     if err != nil  {
@@ -80,15 +78,15 @@ func TestInsertClass(t *testing.T)  {
         if err != nil  {
             t.Fatalf("Failed to query row: %v",err)
         }
-        if(courseID != class.CourseID || title != class.Title || subjectArea != class.Subject_area)  {
+        if(courseID != class.CourseID || title != class.Title || subjectArea != class.SubjectArea)  {
             mistake = true 
         }
-        c := Class{
+        c := models.Class{
             CourseID:    courseID,
             Title:       title,
             SubjectArea: subjectArea,
         }
-        for _, section := range class {
+        for _, section := range class.ClassSections{
             var id int
             err = querySection.QueryRow(class.CourseID).Scan(&id)
             if err != nil  {
@@ -99,12 +97,12 @@ func TestInsertClass(t *testing.T)  {
             if err != nil  {
                 t.Fatalf("Failed to query row %v", err)
             }
-            if(room != section[0].Room || building != section[0].Building || 
-            days != section[0].Days || begin_time != section[0].BeginTime || end_time != section[0].EndTime)  {
+            if(room != section.TimeLocations[0].Room || building != section.TimeLocations[0].Building || 
+            days != section.TimeLocations[0].Days || begin_time != section.TimeLocations[0].BeginTime || end_time != section.TimeLocations[0].EndTime)  {
                 mistake = true
             }
-            s := Section {
-                TimeLocation: []TimeLocation  {
+            s := models.Section {
+                TimeLocations: []models.TimeLocation  {
                     {Room: room, Building: building, Days: days, BeginTime: begin_time, EndTime: end_time},
                 },
             }
@@ -114,4 +112,18 @@ func TestInsertClass(t *testing.T)  {
             t.Fatalf("Expected: %+v, Got: %+v",class,c)
         }
     }
+    _, _ = db.Exec("TRUNCATE TABLE classes CASCADE RESTART IDENTITY;")
+}
+
+func TestQuery(t *testing.T)  {
+    err := InsertAllClasses(Test1, db)
+    if err != nil  {
+        t.Fatalf("Failed to Insert Classes: %v", err)
+    }
+    classes, err := QueryTitle("CMPSC", db)
+    if err != nil  {
+        t.Fatalf("Failed to Query Classes: %v", err)
+    }
+    fmt.Printf("%+v", classes)
+    _, _ = db.Exec("TRUNCATE TABLE classes CASCADE RESTART IDENTITY;")
 }
