@@ -25,7 +25,10 @@ func run(m *testing.M) (code int, err error)  {
     if err != nil  {
         return -1, fmt.Errorf("Failed to connect to db: %v", err)
     }
-    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
+    err = ResetDB(db)
+    if err != nil  {
+        return -1, fmt.Errorf("Failed to reset db: %v", err)
+    }
     err = CreateTable(db)
     if err != nil  {
         log.Println(err)
@@ -38,8 +41,11 @@ func run(m *testing.M) (code int, err error)  {
 
 }
 func TestInsertClass(t *testing.T)  {
-    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
-    err := InsertAllClasses(Test1, db)
+    err := ResetDB(db)
+    if err != nil  {
+        t.Fatalf("Failed to reset: %v", err)
+    }
+    err = InsertAllClasses(Test1, db)
     if err != nil  {
         t.Fatalf("Failed to insert classes: %v", err)
     }
@@ -130,12 +136,18 @@ func TestInsertClass(t *testing.T)  {
             t.Fatalf("Expected: \n%+v, Got: \n%+v",class,c)
         }
     }
-    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
+    err = ResetDB(db)
+    if err != nil  {
+        t.Fatalf("Failed to reset: %v", err)
+    }
 }
 
 func TestQuery(t *testing.T)  {
-    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
-    err := InsertAllClasses(Test1, db)
+    err := ResetDB(db)
+    if err != nil  {
+        t.Fatalf("Failed to reset: %v", err)
+    }
+    err = InsertAllClasses(Test1, db)
     if err != nil  {
         t.Fatalf("Failed to Insert Classes: %v", err)
     }
@@ -144,5 +156,8 @@ func TestQuery(t *testing.T)  {
         t.Fatalf("Failed to Query Classes: \n%v", err)
     }
     fmt.Printf("%+v", classes)
-    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
+    err = ResetDB(db)
+    if err != nil  {
+        t.Fatalf("Failed to reset: %v", err)
+    }
 }
