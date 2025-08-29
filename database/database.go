@@ -54,8 +54,8 @@ func CreateTable(db *sql.DB) error  {
             room TEXT,
             building TEXT,
             days TEXT,
-            begin_time TIME,
-            end_time TIME
+            begin_time TEXT,
+            end_time TEXT
         )`)
     if err != nil  {
         return err
@@ -68,7 +68,7 @@ func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
         return err
     }
     defer insert_class.Close()
-    insert_section,err  := db.Prepare("INSERT INTO section (course_id) VALUES ($1) RETURNING id")
+    insert_section,err  := db.Prepare("INSERT INTO sections (course_id) VALUES ($1) RETURNING id")
     if err != nil  {
         return err
     }
@@ -99,7 +99,7 @@ func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
             }
         }
     }
-    db.Exec(`SET tsv = 
+    db.Exec(`UPDATE classes SET tsv = 
         setweight(to_tsvector('english', coalesce(course_id, '')), 'A') ||
         setweight(to_tsvector('english', coalesce(title, '')), 'B')`)
     return nil
@@ -149,15 +149,26 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
     if err != nil {
         return nil, err
     }
-    var jsonData []byte
-    err = rows.Scan(&jsonData)
-    if err != nil  {
-        return nil, err
-    }
     var classes []models.Class 
-    err = json.Unmarshal(jsonData,&classes)
-    if err != nil  {
-        return nil, err
-    } 
+    for rows.Next()  {
+        var courseID, title, subjectArea string
+        var jsonData []byte
+        err = rows.Scan(&courseID, &title, &subjectArea, &jsonData)
+        if err != nil  {
+            return nil, err
+        }
+        var sections []models.Section 
+        err = json.Unmarshal(jsonData,&sections)
+        if err != nil  {
+            return nil, err
+        } 
+        c := models.Class{
+            CourseID: courseID, 
+            Title: title,
+            SubjectArea: subjectArea,
+            ClassSections: sections,
+        }
+        classes = append(classes,c)
+    }
     return classes, nil
 }

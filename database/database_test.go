@@ -21,24 +21,24 @@ func TestMain(m *testing.M)  {
 }
 
 func run(m *testing.M) (code int, err error)  {
-    
-    db, err := StartDB("TEST_DB_URL")
+    db, err = StartDB("TEST_DB_URL")
     if err != nil  {
         return -1, fmt.Errorf("Failed to connect to db: %v", err)
     }
-
+    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
     err = CreateTable(db)
     if err != nil  {
         log.Println(err)
     }
     defer func()  {
-        _, _ = db.Exec("TRUNCATE TABLE classes CASCADE RESTART IDENTITY;")
+        _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
         db.Close()
     }()
     return m.Run(), nil
 
 }
 func TestInsertClass(t *testing.T)  {
+    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
     err := InsertAllClasses(Test1, db)
     if err != nil  {
         t.Fatalf("Failed to insert classes: %v", err)
@@ -56,7 +56,7 @@ func TestInsertClass(t *testing.T)  {
     }
     defer querySection.Close()
 
-    queryTime, err := db.Prepare(`SELECT room, buiding, days, begin_time, end_time FROM time_locations WHERE section_id = $1`)
+    queryTime, err := db.Prepare(`SELECT room, building, days, begin_time, end_time FROM time_locations WHERE section_id = $1`)
     if err != nil  {
         t.Fatalf("Failed prepare: %v", err)
     }
@@ -86,20 +86,35 @@ func TestInsertClass(t *testing.T)  {
             Title:       title,
             SubjectArea: subjectArea,
         }
-        for _, section := range class.ClassSections{
-            var id int
-            err = querySection.QueryRow(class.CourseID).Scan(&id)
-            if err != nil  {
-                t.Fatalf("Failed to query row: %v", err)
-            }
+        var sections []models.Section
+        for _, s := range class.ClassSections  {
+            sections = append(sections,s)
+        }
+        var id int
+        err = querySection.QueryRow(class.CourseID).Scan(&id)
+        if err != nil  {
+            t.Fatalf("Failed to query row: %v", err)
+        }
+        row, err := queryTime.Query(id)
+        if err != nil  { 
+            t.Fatalf("Failed to query row: %v",err)
+        }
+        defer row.Close()
+        for row.Next()  {
+            found := false; 
             var room, building, days, begin_time, end_time string
-            err = queryTime.QueryRow(id).Scan(&room,&building,&days,&begin_time,&end_time)
+            err := row.Scan(&room,&building,&days,&begin_time,&end_time)
             if err != nil  {
-                t.Fatalf("Failed to query row %v", err)
+                t.Fatalf("Failed to query row: %v",err)
             }
-            if(room != section.TimeLocations[0].Room || building != section.TimeLocations[0].Building || 
-            days != section.TimeLocations[0].Days || begin_time != section.TimeLocations[0].BeginTime || end_time != section.TimeLocations[0].EndTime)  {
-                mistake = true
+            for i:=0; i < len(sections); i++  {
+                if(room == sections[i].TimeLocations[0].Room && building == sections[i].TimeLocations[0].Building && 
+                days == sections[i].TimeLocations[0].Days && begin_time == sections[i].TimeLocations[0].BeginTime && 
+                end_time == sections[i].TimeLocations[0].EndTime)  {
+                    sections = append(sections[:i],sections[i+1:]...)
+                    found = true    
+                    break
+                }
             }
             s := models.Section {
                 TimeLocations: []models.TimeLocation  {
@@ -107,23 +122,27 @@ func TestInsertClass(t *testing.T)  {
                 },
             }
             c.ClassSections = append(c.ClassSections, s)
+            if(!found)  {
+                mistake = true
+            }
         }
         if mistake  {
-            t.Fatalf("Expected: %+v, Got: %+v",class,c)
+            t.Fatalf("Expected: \n%+v, Got: \n%+v",class,c)
         }
     }
-    _, _ = db.Exec("TRUNCATE TABLE classes CASCADE RESTART IDENTITY;")
+    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
 }
 
 func TestQuery(t *testing.T)  {
+    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
     err := InsertAllClasses(Test1, db)
     if err != nil  {
         t.Fatalf("Failed to Insert Classes: %v", err)
     }
     classes, err := QueryTitle("CMPSC", db)
     if err != nil  {
-        t.Fatalf("Failed to Query Classes: %v", err)
+        t.Fatalf("Failed to Query Classes: \n%v", err)
     }
     fmt.Printf("%+v", classes)
-    _, _ = db.Exec("TRUNCATE TABLE classes CASCADE RESTART IDENTITY;")
+    _, _ = db.Exec("TRUNCATE TABLE classes, sections, time_locations RESTART IDENTITY CASCADE;")
 }
