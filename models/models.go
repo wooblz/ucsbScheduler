@@ -10,13 +10,14 @@ type Class struct  {
     Title                    string `json:"title"`
     SubjectArea              string `json:"subjectArea"`
     ClassSections []Section `json:"classSections"`
-    Room         string `json:"room"`
-	Building     string `json:"building"`
-	Days         string `json:"days"`
-	BeginTime    string `json:"beginTime"`
-	EndTime      string `json:"endTime"`
+    Room         string 
+	Building     string 
+	Days         string 
+	BeginTime    string 
+	EndTime      string 
 }
 type Section struct  {
+    Number  string  `json:"section"`
     TimeLocations []TimeLocation `json:"timeLocations"`
 }
 type TimeLocation struct  {
