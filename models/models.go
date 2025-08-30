@@ -10,6 +10,11 @@ type Class struct  {
     Title                    string `json:"title"`
     SubjectArea              string `json:"subjectArea"`
     ClassSections []Section `json:"classSections"`
+    Room         string `json:"room"`
+	Building     string `json:"building"`
+	Days         string `json:"days"`
+	BeginTime    string `json:"beginTime"`
+	EndTime      string `json:"endTime"`
 }
 type Section struct  {
     TimeLocations []TimeLocation `json:"timeLocations"`
