@@ -59,6 +59,20 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
         if result.Total == 0  {
             break
         }
+        for j := range result.Classes  {
+            c := &result.Classes[j]
+            i, err := getMainTime(c.ClassSections) 
+            if err != nil  {
+                continue 
+            }
+            s := c.ClassSections[i].TimeLocations[0]
+            c.Room = s.Room 
+            c.Building = s.Building
+            c.Days = s.Days
+            c.BeginTime = s.BeginTime
+            c.EndTime = s.EndTime
+            c.ClassSections = append(c.ClassSections[:i], c.ClassSections[i+1:]...)
+        }
         sol = append(sol,result.Classes...)
         pageCount++
         if math.Ceil(float64(result.Total)/float64(loadSize)) < float64(pageCount) {
@@ -66,6 +80,14 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
         }
     }
     return sol, nil
+}
+func getMainTime(sections []models.Section) (int, error)  {
+    for i, s := range sections  {
+        if s.Number == "0100"  {
+            return i, nil
+        }
+    }
+    return -1, fmt.Errorf("Failed to find main class")
 }
 
 //https://api.ucsb.edu/academics/curriculums/v3/finals

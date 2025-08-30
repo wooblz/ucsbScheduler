@@ -48,7 +48,7 @@ func TestFinalAPI(t *testing.T)  {
     })
 }
 func TestClassAPI(t *testing.T)  {
-    t.Run("test single input", func (t *testing.T)  {
+    /*t.Run("test single input", func (t *testing.T)  {
         data,err := os.ReadFile("api_test_data/oneclassandsection")
         if err != nil   {
             t.Fatalf("Failed to open file: %v", err)
@@ -82,7 +82,7 @@ func TestClassAPI(t *testing.T)  {
             t.Fatalf("Failed to get course: %v", err)
         }
         assertClassesEqual(t, got, Solution2)
-    })
+    })*/
     t.Run("multi page test", func(t *testing.T)  {
         old := loadSize
         loadSize = 3

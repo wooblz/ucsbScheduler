@@ -127,12 +127,12 @@ var Solution3 = []models.Class{
         CourseID:    "CMPSC    16  ",
         Title:       "PROBLEM SOLVING I",
         SubjectArea: "CMPSC   ",
+        Room:        "1101",
+        Building:    "ILP",
+        Days:        "M W    ",
+        BeginTime:   "14:00",
+        EndTime:     "15:15",
         ClassSections: []models.Section{
-            {
-                TimeLocations: []models.TimeLocation{
-                    {Room: "1101", Building: "ILP", Days: "M W    ", BeginTime: "14:00", EndTime: "15:15"},
-                },
-            },
             {
                 TimeLocations: []models.TimeLocation{
                     {Room: "3525", Building: "PHELP", Days: "   R   ", BeginTime: "09:00", EndTime: "09:50"},
@@ -164,12 +164,12 @@ var Solution3 = []models.Class{
         CourseID:    "CMPSC    24  ",
         Title:       "PROBLEM SOLVING II",
         SubjectArea: "CMPSC   ",
+        Room:        "1701",
+        Building:    "TD-W",
+        Days:        "M W    ",
+        BeginTime:   "11:00",
+        EndTime:     "12:15",
         ClassSections: []models.Section{
-            {
-                TimeLocations: []models.TimeLocation{
-                    {Room: "1701", Building: "TD-W", Days: "M W    ", BeginTime: "11:00", EndTime: "12:15"},
-                },
-            },
             {
                 TimeLocations: []models.TimeLocation{
                     {Room: "3525", Building: "PHELP", Days: "   R   ", BeginTime: "14:00", EndTime: "14:50"},
@@ -201,27 +201,26 @@ var Solution3 = []models.Class{
         CourseID:    "MATH    190PS",
         Title:       "PROBLEM SOLVING",
         SubjectArea: "MATH    ",
-        ClassSections: []models.Section{
-            {
-                TimeLocations: []models.TimeLocation{
-                    {Room: "1508", Building: "PHELP", Days: "M W F  ", BeginTime: "09:00", EndTime: "09:50"},
-                },
-            },
-        },
+        Room:        "1508",
+        Building:    "PHELP",
+        Days:        "M W F  ",
+        BeginTime:   "09:00",
+        EndTime:     "09:50",
+        ClassSections: []models.Section{},
     },
     {
         CourseID:    "MATH CS 101A ",
         Title:       "PROBLEM SOLVING I",
         SubjectArea: "MATH CS ",
-        ClassSections: []models.Section{
-            {
-                TimeLocations: []models.TimeLocation{
-                    {Room: "164B", Building: "CRST", Days: " T R   ", BeginTime: "14:00", EndTime: "15:15"},
-                },
-            },
-        },
+        Room:        "164B",
+        Building:    "CRST",
+        Days:        " T R   ",
+        BeginTime:   "14:00",
+        EndTime:     "15:15",
+        ClassSections: []models.Section{},
     },
 }
+
 var FinalSolution1 = models.Final {
     HasFinals: true,
     Comments:  "",
