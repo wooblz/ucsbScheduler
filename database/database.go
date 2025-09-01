@@ -34,6 +34,11 @@ func CreateTable(db *sql.DB) error  {
             course_id TEXT PRIMARY KEY, 
             title TEXT NOT NULL,
             subject_area TEXT NOT NULL,
+            room TEXT,
+            building TEXT,
+            days TEXT,
+            begin_time TEXT,
+            end_time TEXT,
             tsv tsvector
         )`)
     if err != nil  {
@@ -63,7 +68,7 @@ func CreateTable(db *sql.DB) error  {
     return nil
 }
 func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
-    insert_class,err := db.Prepare("INSERT INTO classes VALUES ($1, $2, $3)")
+    insert_class,err := db.Prepare("INSERT INTO classes VALUES ($1, $2, $3, $4, $5, $6, $7, $8)")
     if err != nil {
         return err
     }
@@ -81,7 +86,7 @@ func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
     }
     defer insert_time.Close()
     for _, v := range classes {
-        _, err = insert_class.Exec(v.CourseID, v.Title, v.SubjectArea)
+        _, err = insert_class.Exec(v.CourseID, v.Title, v.SubjectArea, v.Room, v.Building, v.Days, v.BeginTime, v.EndTime)
         if  err != nil  {
             return err 
         }
@@ -119,6 +124,11 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
             c.course_id, 
             c.title, 
             c.subject_area,
+            c.room,
+            c.building,
+            c.days,
+            c.begin_time,
+            c.end_time,
             json_agg(
                 json_build_object(
                     'timeLocations', (
@@ -139,7 +149,7 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
         FROM classes c
         LEFT JOIN sections s ON s.course_id = c.course_id
         WHERE c.tsv @@ plainto_tsquery('english', $1)
-        GROUP BY c.course_id, c.title, c.subject_area;
+        GROUP BY c.course_id, c.title, c.subject_area, c.room, c.building, c.days, c.begin_time, c.end_time;    
     `)
     if err != nil  {
         return nil, err
@@ -151,9 +161,9 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
     }
     var classes []models.Class 
     for rows.Next()  {
-        var courseID, title, subjectArea string
+        var courseID, title, subjectArea, room, building, days, begin_time, end_time string
         var jsonData []byte
-        err = rows.Scan(&courseID, &title, &subjectArea, &jsonData)
+        err = rows.Scan(&courseID, &title, &subjectArea, &room, &building, &days, &begin_time, &end_time, &jsonData)
         if err != nil  {
             return nil, err
         }
@@ -166,6 +176,11 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
             CourseID: courseID, 
             Title: title,
             SubjectArea: subjectArea,
+            Room: room,
+            Building: building,
+            Days: days,
+            BeginTime: begin_time,
+            EndTime: end_time,
             ClassSections: sections,
         }
         classes = append(classes,c)

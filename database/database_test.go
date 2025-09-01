@@ -25,10 +25,6 @@ func run(m *testing.M) (code int, err error)  {
     if err != nil  {
         return -1, fmt.Errorf("Failed to connect to db: %v", err)
     }
-    err = ResetDB(db)
-    if err != nil  {
-        return -1, fmt.Errorf("Failed to reset db: %v", err)
-    }
     err = CreateTable(db)
     if err != nil  {
         log.Println(err)
@@ -50,7 +46,7 @@ func TestInsertClass(t *testing.T)  {
         t.Fatalf("Failed to insert classes: %v", err)
     }
 
-    queryClass,err := db.Prepare(`SELECT course_id, title, subject_area FROM classes WHERE course_id = $1`)
+    queryClass,err := db.Prepare(`SELECT course_id, title, subject_area, room, building, days, begin_time, end_time FROM classes WHERE course_id = $1`)
     if err != nil  {
         t.Fatalf("Failed prepare: %v", err)
     }
@@ -77,24 +73,32 @@ func TestInsertClass(t *testing.T)  {
         t.Fatalf("Miscount: %d", count)
     }
 
-    var title, courseID, subjectArea string
+    var title, courseID, subjectArea, room, building, days, begin_time, end_time string
     for _, class := range Test1  {
         mistake := false
-        err = queryClass.QueryRow(class.CourseID).Scan(&courseID, &title, &subjectArea)
+        err = queryClass.QueryRow(class.CourseID).Scan(&courseID, &title, &subjectArea, &room, &building, &days, &begin_time, &end_time)
         if err != nil  {
             t.Fatalf("Failed to query row: %v",err)
         }
-        if(courseID != class.CourseID || title != class.Title || subjectArea != class.SubjectArea)  {
+        if(courseID != class.CourseID || title != class.Title || subjectArea != class.SubjectArea || room != class.Room || building != class.Building || days != class.Days || begin_time != class.BeginTime || end_time != class.EndTime)  {
             mistake = true 
         }
         c := models.Class{
             CourseID:    courseID,
             Title:       title,
             SubjectArea: subjectArea,
+            Room: room,
+            Building: building, 
+            Days: days, 
+            BeginTime: begin_time, 
+            EndTime: end_time,
         }
         var sections []models.Section
         for _, s := range class.ClassSections  {
             sections = append(sections,s)
+        }
+        if len(class.ClassSections) == 0 {
+            continue
         }
         var id int
         err = querySection.QueryRow(class.CourseID).Scan(&id)
@@ -155,7 +159,7 @@ func TestQuery(t *testing.T)  {
     if err != nil  {
         t.Fatalf("Failed to Query Classes: \n%v", err)
     }
-    fmt.Printf("%+v", classes)
+    fmt.Printf("\n%+v", classes)
     err = ResetDB(db)
     if err != nil  {
         t.Fatalf("Failed to reset: %v", err)
