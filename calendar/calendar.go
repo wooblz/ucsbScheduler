@@ -11,11 +11,11 @@ import  (
 )
 
 var dayMap2 = map[rune]int  {
-    "M": 0,
-    "T": 1,
-    "W": 2,
-    "R": 3,
-    "F": 4,
+    "M": 4,
+    "T": 5,
+    "W": 6,
+    "R": 0,
+    "F": 1,
 }
 func createEvent(uid, summary, location, description, rule string, start, end time.Time cal *ics.Calendar) error  {
     class := cal.AddEvent(uid)
