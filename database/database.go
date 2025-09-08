@@ -10,7 +10,7 @@ import (
     "github.com/joho/godotenv"
 )
 
-const url string = "TEST_DB_URL"
+const url string = "DB_URL"
 
 func StartDB(name string) (*sql.DB, error)  {
     err := godotenv.Load("../.env")

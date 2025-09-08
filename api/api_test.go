@@ -177,40 +177,80 @@ func assertFinalEqual(t *testing.T, got, want models.Final)  {
     }
 }
 func assertClassesEqual(t *testing.T, got, want []models.Class) {
-    if len(got) != len(want) {
-        t.Fatalf("Class count mismatch: got %d, want %d", len(got), len(want))
-    }
+	if len(got) != len(want) {
+		t.Fatalf("Class slice length mismatch: got %d, want %d", len(got), len(want))
+		return // Stop if lengths are different
+	}
 
-    for i := range want {
-        if got[i].CourseID != want[i].CourseID {
-            t.Errorf("class[%d].CourseID: got %q, want %q", i, got[i].CourseID, want[i].CourseID)
-        }
-        if got[i].Title != want[i].Title {
-            t.Errorf("class[%d].Title: got %q, want %q", i, got[i].Title, want[i].Title)
-        }
-        if got[i].SubjectArea != want[i].SubjectArea {
-            t.Errorf("class[%d].SubjectArea: got %q, want %q", i, got[i].SubjectArea, want[i].SubjectArea)
-        }
-        if len(got[i].ClassSections) != len(want[i].ClassSections) {
-            t.Errorf("class[%d] section count mismatch: got %d, want %d", i, len(got[i].ClassSections), len(want[i].ClassSections))
-            continue
-        }
+	for i := range want {
+		g_class := got[i]
+		w_class := want[i]
 
-        for j := range want[i].ClassSections {
-            if len(got[i].ClassSections[j].TimeLocations) != len(want[i].ClassSections[j].TimeLocations) {
-                t.Errorf("class[%d] section[%d] time location count mismatch: got %d, want %d",
-                    i, j, len(got[i].ClassSections[j].TimeLocations), len(want[i].ClassSections[j].TimeLocations))
-                continue
-            }
+		// --- Compare top-level Class fields ---
+		if g_class.CourseID != w_class.CourseID {
+			t.Errorf("class[%d].CourseID: got %q, want %q", i, g_class.CourseID, w_class.CourseID)
+		}
+		if g_class.Title != w_class.Title {
+			t.Errorf("class[%d].Title: got %q, want %q", i, g_class.Title, w_class.Title)
+		}
+		if g_class.SubjectArea != w_class.SubjectArea {
+			t.Errorf("class[%d].SubjectArea: got %q, want %q", i, g_class.SubjectArea, w_class.SubjectArea)
+		}
+		if g_class.EnrollCode != w_class.EnrollCode {
+			t.Errorf("class[%d].EnrollCode: got %q, want %q", i, g_class.EnrollCode, w_class.EnrollCode)
+		}
+		if g_class.Room != w_class.Room {
+			t.Errorf("class[%d].Room: got %q, want %q", i, g_class.Room, w_class.Room)
+		}
+		if g_class.Building != w_class.Building {
+			t.Errorf("class[%d].Building: got %q, want %q", i, g_class.Building, w_class.Building)
+		}
+		if g_class.Days != w_class.Days {
+			t.Errorf("class[%d].Days: got %q, want %q", i, g_class.Days, w_class.Days)
+		}
+		if g_class.BeginTime != w_class.BeginTime {
+			t.Errorf("class[%d].BeginTime: got %q, want %q", i, g_class.BeginTime, w_class.BeginTime)
+		}
+		if g_class.EndTime != w_class.EndTime {
+			t.Errorf("class[%d].EndTime: got %q, want %q", i, g_class.EndTime, w_class.EndTime)
+		}
 
-            for k := range want[i].ClassSections[j].TimeLocations {
-                g := got[i].ClassSections[j].TimeLocations[k]
-                w := want[i].ClassSections[j].TimeLocations[k]
-                if !reflect.DeepEqual(g, w) {
-                    t.Errorf("class[%d] section[%d] timeLocation[%d] mismatch:\ngot:  %+v\nwant: %+v", i, j, k, g, w)
-                }
-            }
-        }
-    }
+		// --- Compare ClassSections slice ---
+		if len(g_class.ClassSections) != len(w_class.ClassSections) {
+			t.Errorf("class[%d] section count mismatch: got %d, want %d", i, len(g_class.ClassSections), len(w_class.ClassSections))
+			continue // Skip to next class if section counts differ
+		}
+
+		for j := range w_class.ClassSections {
+			g_sec := g_class.ClassSections[j]
+			w_sec := w_class.ClassSections[j]
+
+			// --- Compare Section fields ---
+			if g_sec.Number != w_sec.Number {
+				t.Errorf("class[%d].section[%d].Number: got %q, want %q", i, j, g_sec.Number, w_sec.Number)
+			}
+			if g_sec.EnrollCode != w_sec.EnrollCode {
+				t.Errorf("class[%d].section[%d].EnrollCode: got %q, want %q", i, j, g_sec.EnrollCode, w_sec.EnrollCode)
+			}
+
+			// --- Compare TimeLocations slice (using DeepEqual is fine here) ---
+			if len(g_sec.TimeLocations) != len(w_sec.TimeLocations) {
+				t.Errorf("class[%d].section[%d] time location count mismatch: got %d, want %d",
+					i, j, len(g_sec.TimeLocations), len(w_sec.TimeLocations))
+				continue
+			}
+
+			for k := range w_sec.TimeLocations {
+				g_loc := g_sec.TimeLocations[k]
+				w_loc := w_sec.TimeLocations[k]
+
+				// Since TimeLocation fields should be exact, DeepEqual is still a good choice.
+				// For better diffs on a mismatch, consider the go-cmp package.
+				if !reflect.DeepEqual(g_loc, w_loc) {
+					t.Errorf("class[%d].section[%d].timeLocation[%d] mismatch:\ngot:  %+v\nwant: %+v", i, j, k, g_loc, w_loc)
+				}
+			}
+		}
+	}
 }
 

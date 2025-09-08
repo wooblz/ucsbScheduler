@@ -71,6 +71,7 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
             c.Days = s.Days
             c.BeginTime = s.BeginTime
             c.EndTime = s.EndTime
+            c.EnrollCode = c.ClassSections[i].EnrollCode
             c.ClassSections = append(c.ClassSections[:i], c.ClassSections[i+1:]...)
         }
         sol = append(sol,result.Classes...)
@@ -91,7 +92,7 @@ func getMainTime(sections []models.Section) (int, error)  {
 }
 
 //https://api.ucsb.edu/academics/curriculums/v3/finals
-func GetFinal(quarter int, courseID string, baseURL string, client *http.Client) (models.Final,error) {
+func GetFinal(quarter int, enrollCode string, baseURL string, client *http.Client) (models.Final,error) {
     if len(strconv.Itoa(quarter)) != 5  {
         return models.Final{}, errors.New("Invalid quarter, YYYYQ format")
     }
@@ -102,7 +103,7 @@ func GetFinal(quarter int, courseID string, baseURL string, client *http.Client)
     api_key := os.Getenv("API_KEY")
     parameters := url.Values{}
     parameters.Add("quarter",strconv.Itoa(quarter))
-    parameters.Add("enrollCode", courseID)
+    parameters.Add("enrollCode", enrollCode)
 
     url := baseURL + "?" + parameters.Encode()
     req,err := http.NewRequest("GET", url, nil)
@@ -126,10 +127,10 @@ func GetFinal(quarter int, courseID string, baseURL string, client *http.Client)
         return models.Final{}, err
     }
     if result.Message != ""  {
-        return models.Final{}, errors.New(result.Message)
+        return result, errors.New(result.Message)
     }
     if result.ExamDay == ""  {
-        return models.Final{}, errors.New(fmt.Sprintf("Could not find final for courseID: %s", courseID))
+        return result, errors.New(fmt.Sprintf("Could not find final for enrollCode: %s", enrollCode))
     }
     return result, nil
 }
