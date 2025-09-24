@@ -25,6 +25,10 @@ func run(m *testing.M) (code int, err error)  {
     if err != nil  {
         return -1, fmt.Errorf("Failed to connect to db: %v", err)
     }
+    err = ResetDB(db)
+    if err != nil  {
+        return -1, fmt.Errorf("Failed to  reset db: %v", err)
+    }
     err = CreateTable(db)
     if err != nil  {
         log.Println(err)
@@ -52,7 +56,7 @@ func TestInsertClass(t *testing.T)  {
     }
     defer queryClass.Close()
 
-    querySection,err := db.Prepare(`SELECT id FROM sections WHERE course_id = $1`)
+    querySection,err := db.Prepare(`SELECT id, enroll_code FROM sections WHERE course_id = $1`)
     if err != nil  {
         t.Fatalf("Failed prepare: %v", err)
     }
@@ -101,7 +105,8 @@ func TestInsertClass(t *testing.T)  {
             continue
         }
         var id int
-        err = querySection.QueryRow(class.CourseID).Scan(&id)
+        var enrollCode string
+        err = querySection.QueryRow(class.CourseID).Scan(&id, &enrollCode)
         if err != nil  {
             t.Fatalf("Failed to query row: %v", err)
         }
@@ -130,6 +135,7 @@ func TestInsertClass(t *testing.T)  {
                 TimeLocations: []models.TimeLocation  {
                     {Room: room, Building: building, Days: days, BeginTime: begin_time, EndTime: end_time},
                 },
+                EnrollCode : enrollCode, 
             }
             c.ClassSections = append(c.ClassSections, s)
             if(!found)  {
@@ -159,7 +165,16 @@ func TestQuery(t *testing.T)  {
     if err != nil  {
         t.Fatalf("Failed to Query Classes: \n%v", err)
     }
-    fmt.Printf("\n%+v", classes)
+    for _, c := range classes {
+		fmt.Printf("Class: %s, Title: %s, Enroll: %s, Time: %s %s-%s\n", c.CourseID, c.Title, c.EnrollCode, c.Days, c.BeginTime, c.EndTime)
+		for _, s := range c.ClassSections {
+			fmt.Printf("  - Section Enroll: %s\n", s.EnrollCode)
+			for _, tl := range s.TimeLocations {
+				fmt.Printf("    -> Location: %s-%s, Time: %s %s-%s\n", tl.Building, tl.Room, tl.Days, tl.BeginTime, tl.EndTime)
+			}
+		}
+		fmt.Println("--------------------")
+	}
     err = ResetDB(db)
     if err != nil  {
         t.Fatalf("Failed to reset: %v", err)

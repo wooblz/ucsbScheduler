@@ -61,20 +61,12 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
         }
         for j := range result.Classes  {
             c := &result.Classes[j]
-            i, err := getMainTime(c.ClassSections) 
+            classList, err := getMainTime(c)
             if err != nil  {
                 continue 
             }
-            s := c.ClassSections[i].TimeLocations[0]
-            c.Room = s.Room 
-            c.Building = s.Building
-            c.Days = s.Days
-            c.BeginTime = s.BeginTime
-            c.EndTime = s.EndTime
-            c.EnrollCode = c.ClassSections[i].EnrollCode
-            c.ClassSections = append(c.ClassSections[:i], c.ClassSections[i+1:]...)
+            sol = append(sol, classList)
         }
-        sol = append(sol,result.Classes...)
         pageCount++
         if math.Ceil(float64(result.Total)/float64(loadSize)) < float64(pageCount) {
             break
@@ -82,9 +74,39 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
     }
     return sol, nil
 }
-func getMainTime(sections []models.Section) (int, error)  {
+func getMainTime(c models.Class) ([]models.Class, error)  {
+    var classes []model.Class
+    dic := make(map[string][]models.Section)
+    for _, s := range c.ClassSections {
+        firstTwo := s.Number[:2]
+        dic[firstTwo] = append(dic[firstTwo], s)
+    }
+    for key, value := range dic  {
+
+        cur := model.Class  {
+            CourseID := c.CourseID
+            Title := c.Title
+            SubjectArea := c.SubjectArea
+        }
+        a,_ := getMainSection(key, value)
+
+        cur.ClassSections := value 
+        s := value[a].TimeLocations[0]
+        cur.Room = s.Room
+        cur.Building = s.Building
+        cur.Days = s.Days
+        cur.BeginTime = s.BeginTime
+        cur.EndTime = s.EndTime
+        cur.EnrollCode = c.ClassSections[i].EnrollCode
+        cur.ClassSections = append(cur.ClassSections[:a], cur.ClassSections[a+1:]...)
+        classes = append(classes, cur)
+    }
+    return classes, nil
+
+}
+func getMainSection(code string, sections []models.Section) (int, error)  {
     for i, s := range sections  {
-        if s.Number == "0100"  {
+        if s.Number == code + "00"  {
             return i, nil
         }
     }

@@ -47,6 +47,7 @@ func CreateTable(db *sql.DB) error  {
     _, err = db.Exec(` 
         CREATE TABLE IF NOT EXISTS sections (
             id SERIAL PRIMARY KEY,
+            enroll_code TEXT,
             course_id TEXT REFERENCES classes(course_id) ON DELETE CASCADE
         )`)
     if err != nil  {
@@ -73,7 +74,7 @@ func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
         return err
     }
     defer insert_class.Close()
-    insert_section,err  := db.Prepare("INSERT INTO sections (course_id) VALUES ($1) RETURNING id")
+    insert_section,err  := db.Prepare("INSERT INTO sections (course_id, enroll_code) VALUES ($1, $2) RETURNING id")
     if err != nil  {
         return err
     }
@@ -92,7 +93,7 @@ func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
         }
         for _, w := range v.ClassSections  {
             var SectionID int
-            err = insert_section.QueryRow(v.CourseID).Scan(&SectionID)
+            err = insert_section.QueryRow(v.CourseID,w.EnrollCode).Scan(&SectionID)
             if err != nil  {
                 return err
             }
@@ -120,36 +121,44 @@ func ResetDB(db *sql.DB) error {
 
 func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
     query_line, err := db.Prepare(`
-        SELECT 
-            c.course_id, 
-            c.title, 
+        SELECT
+            c.course_id,
+            c.title,
             c.subject_area,
             c.room,
             c.building,
             c.days,
             c.begin_time,
             c.end_time,
-            json_agg(
-                json_build_object(
-                    'timeLocations', (
-                        SELECT json_agg(
-                            json_build_object(
-                                'room', tl.room,
-                                'building', tl.building,
-                                'days', tl.days,
-                                'beginTime', tl.begin_time,
-                                'endTime', tl.end_time
+            (
+                SELECT COALESCE(json_agg(s_obj), '[]'::json)
+                FROM (
+                    SELECT
+                        json_build_object(
+                            'enrollCode', s.enroll_code,
+                            'timeLocations', (
+                                SELECT COALESCE(json_agg(tl_obj), '[]'::json)
+                                FROM (
+                                    SELECT json_build_object(
+                                        'room', tl.room,
+                                        'building', tl.building,
+                                        'days', tl.days,
+                                        'beginTime', tl.begin_time,
+                                        'endTime', tl.end_time
+                                    ) as tl_obj
+                                    FROM time_locations tl
+                                    WHERE tl.section_id = s.id 
+                                    ORDER BY tl.id
+                                ) tl_sub
                             )
-                        )
-                        FROM time_locations tl
-                        WHERE tl.section_id = s.id
-                    )
-                )
-            ) AS classSections
+                        ) as s_obj
+                    FROM sections s
+                    WHERE s.course_id = c.course_id 
+                    ORDER BY s.enroll_code
+                ) s_sub
+            ) as classSections
         FROM classes c
-        LEFT JOIN sections s ON s.course_id = c.course_id
-        WHERE c.tsv @@ plainto_tsquery('english', $1)
-        GROUP BY c.course_id, c.title, c.subject_area, c.room, c.building, c.days, c.begin_time, c.end_time;    
+        WHERE c.tsv @@ plainto_tsquery('english', $1);
     `)
     if err != nil  {
         return nil, err
