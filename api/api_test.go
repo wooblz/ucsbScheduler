@@ -10,7 +10,6 @@ import  (
     "reflect"
     "strconv"
     "github.com/wooblz/ucsbScheduler/models"
-    
 )
 func TestFinalAPI(t *testing.T)  {
     t.Run("final", func(t *testing.T)  {
@@ -48,8 +47,8 @@ func TestFinalAPI(t *testing.T)  {
     })
 }
 func TestClassAPI(t *testing.T)  {
-    /*t.Run("test single input", func (t *testing.T)  {
-        data,err := os.ReadFile("api_test_data/oneclassandsection")
+    t.Run("multi main section", func (t *testing.T)  {
+        data,err := os.ReadFile("api_test_data/oneclassbutmulti")
         if err != nil   {
             t.Fatalf("Failed to open file: %v", err)
         }
@@ -63,9 +62,9 @@ func TestClassAPI(t *testing.T)  {
         if err != nil  {
             t.Fatalf("Failed to get course: %v", err)
         }
-
         assertClassesEqual(t, got, Solution1)
     })
+    /*
     t.Run("test multiple classes", func(t *testing.T)  {
         data,err := os.ReadFile("api_test_data/multiclass")
         if err != nil   {

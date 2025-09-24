@@ -60,12 +60,12 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
             break
         }
         for j := range result.Classes  {
-            c := &result.Classes[j]
+            c := result.Classes[j]
             classList, err := getMainTime(c)
             if err != nil  {
                 continue 
             }
-            sol = append(sol, classList)
+            sol = append(sol, classList...)
         }
         pageCount++
         if math.Ceil(float64(result.Total)/float64(loadSize)) < float64(pageCount) {
@@ -75,7 +75,7 @@ func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.C
     return sol, nil
 }
 func getMainTime(c models.Class) ([]models.Class, error)  {
-    var classes []model.Class
+    var classes []models.Class
     dic := make(map[string][]models.Section)
     for _, s := range c.ClassSections {
         firstTwo := s.Number[:2]
@@ -83,21 +83,21 @@ func getMainTime(c models.Class) ([]models.Class, error)  {
     }
     for key, value := range dic  {
 
-        cur := model.Class  {
-            CourseID := c.CourseID
-            Title := c.Title
-            SubjectArea := c.SubjectArea
+        cur := models.Class  {
+            CourseID: c.CourseID,
+            Title: c.Title,
+            SubjectArea: c.SubjectArea,
         }
         a,_ := getMainSection(key, value)
 
-        cur.ClassSections := value 
+        cur.ClassSections = value 
         s := value[a].TimeLocations[0]
         cur.Room = s.Room
         cur.Building = s.Building
         cur.Days = s.Days
         cur.BeginTime = s.BeginTime
         cur.EndTime = s.EndTime
-        cur.EnrollCode = c.ClassSections[i].EnrollCode
+        cur.EnrollCode = value[a].EnrollCode
         cur.ClassSections = append(cur.ClassSections[:a], cur.ClassSections[a+1:]...)
         classes = append(classes, cur)
     }
