@@ -31,9 +31,11 @@ func StartDB(name string) (*sql.DB, error)  {
 func CreateTable(db *sql.DB) error  {
     _, err := db.Exec(`
         CREATE TABLE IF NOT EXISTS classes (
-            course_id TEXT PRIMARY KEY, 
+            id SERIAL PRIMARY KEY, 
+            course_id TEXT, 
             title TEXT NOT NULL,
             subject_area TEXT NOT NULL,
+            enroll_code TEXT,
             room TEXT,
             building TEXT,
             days TEXT,
@@ -48,7 +50,7 @@ func CreateTable(db *sql.DB) error  {
         CREATE TABLE IF NOT EXISTS sections (
             id SERIAL PRIMARY KEY,
             enroll_code TEXT,
-            course_id TEXT REFERENCES classes(course_id) ON DELETE CASCADE
+            course_id INT REFERENCES classes(id) ON DELETE CASCADE
         )`)
     if err != nil  {
         return err
@@ -69,7 +71,7 @@ func CreateTable(db *sql.DB) error  {
     return nil
 }
 func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
-    insert_class,err := db.Prepare("INSERT INTO classes VALUES ($1, $2, $3, $4, $5, $6, $7, $8)")
+    insert_class,err := db.Prepare("INSERT INTO classes (course_id, title, subject_area, enroll_code, room, building, days, begin_time, end_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id")
     if err != nil {
         return err
     }
@@ -87,13 +89,14 @@ func InsertAllClasses(classes []models.Class, db *sql.DB) error  {
     }
     defer insert_time.Close()
     for _, v := range classes {
-        _, err = insert_class.Exec(v.CourseID, v.Title, v.SubjectArea, v.Room, v.Building, v.Days, v.BeginTime, v.EndTime)
+        var ClassID int 
+        err = insert_class.QueryRow(v.CourseID, v.Title, v.SubjectArea, v.EnrollCode, v.Room, v.Building, v.Days, v.BeginTime, v.EndTime).Scan(&ClassID)
         if  err != nil  {
             return err 
         }
         for _, w := range v.ClassSections  {
             var SectionID int
-            err = insert_section.QueryRow(v.CourseID,w.EnrollCode).Scan(&SectionID)
+            err = insert_section.QueryRow(ClassID,w.EnrollCode).Scan(&SectionID)
             if err != nil  {
                 return err
             }
@@ -125,6 +128,7 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
             c.course_id,
             c.title,
             c.subject_area,
+            c.enroll_code,
             c.room,
             c.building,
             c.days,
@@ -153,7 +157,7 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
                             )
                         ) as s_obj
                     FROM sections s
-                    WHERE s.course_id = c.course_id 
+                    WHERE s.course_id = c.id 
                     ORDER BY s.enroll_code
                 ) s_sub
             ) as classSections
@@ -170,9 +174,9 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
     }
     var classes []models.Class 
     for rows.Next()  {
-        var courseID, title, subjectArea, room, building, days, begin_time, end_time string
+        var courseID, title, subjectArea, enrollCode, room, building, days, begin_time, end_time string
         var jsonData []byte
-        err = rows.Scan(&courseID, &title, &subjectArea, &room, &building, &days, &begin_time, &end_time, &jsonData)
+        err = rows.Scan(&courseID, &title, &subjectArea, &enrollCode, &room, &building, &days, &begin_time, &end_time, &jsonData)
         if err != nil  {
             return nil, err
         }
@@ -185,6 +189,7 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
             CourseID: courseID, 
             Title: title,
             SubjectArea: subjectArea,
+            EnrollCode : enrollCode,
             Room: room,
             Building: building,
             Days: days,
