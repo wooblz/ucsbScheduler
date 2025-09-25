@@ -1,0 +1,104 @@
+{
+  "pageNumber": 1,
+  "pageSize": 1,
+  "total": 4,
+  "classes": [
+    {
+      "quarter": "20251",
+      "courseId": "CHEM 1A",
+      "title": "GEN CHEM",
+      "description": "Topics covered: atomic structure of matter; reaction stoichiometry; solution stoichiometry; gasses; quantum chemistry and the electronic structure of atoms; chemical bonding (molecular shapes, hybridization, and molecular orbital theory).",
+      "college": "L&S",
+      "subjectArea": "CHEM",
+      "unitsFixed": 4,
+      "instructionType": "LEC",
+      "instructionTypeSecondary": "DIS",
+      "classSections": [
+        {
+          "enrollCode": "04531",
+          "section": "0100",
+          "enrolledTotal": 281,
+          "maxEnroll": 306,
+          "timeLocations": [
+            {
+              "room": "1910",
+              "building": "BUCHN",
+              "days": "M W F",
+              "beginTime": "09:00",
+              "endTime": "09:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "SYLVESTER B M",
+              "functionCode": "Teaching and in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "57950",
+          "section": "0101",
+          "enrolledTotal": 23,
+          "maxEnroll": 24,
+          "timeLocations": [
+            {
+              "room": "4201",
+              "building": "HSSB",
+              "days": "M",
+              "beginTime": "16:00",
+              "endTime": "16:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "WEISSMAN G S",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "04549",
+          "section": "0200",
+          "enrolledTotal": 275,
+          "maxEnroll": 306,
+          "timeLocations": [
+            {
+              "room": "1910",
+              "building": "BUCHN",
+              "days": "M W F",
+              "beginTime": "10:00",
+              "endTime": "10:50"
+            }
+          ],
+          "instructors": [
+            {
+              "instructor": "SYLVESTER B M",
+              "functionCode": "Teaching and in charge"
+            }
+          ]
+        },
+        {
+          "enrollCode": "57968",
+          "section": "0201",
+          "enrolledTotal": 22,
+          "maxEnroll": 24,
+          "timeLocations": [
+            {
+              "room": "2115",
+              "building": "GIRV",
+              "days": "F",
+              "beginTime": "09:00",
+              "endTime": "09:50"
+            }
+          ],
+          "instructors": [
+             {
+              "instructor": "SMITH J D",
+              "functionCode": "Teaching but not in charge"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
