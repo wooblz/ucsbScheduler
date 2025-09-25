@@ -124,3 +124,57 @@ var Test1 = []models.Class{
 		ClassSections: []models.Section{},
 	},
 }
+var Test2 = []models.Class{
+	{
+		CourseID:    "CHEM 1A",
+		Title:       "GEN CHEM",
+		SubjectArea: "CHEM",
+		EnrollCode:  "04531",
+		Room:        "1910",
+		Building:    "BUCHN",
+		Days:        "M W F",
+		BeginTime:   "09:00",
+		EndTime:     "09:50",
+		ClassSections: []models.Section{
+			{
+				EnrollCode: "57950",
+				Number:     "0101",
+				TimeLocations: []models.TimeLocation{
+					{
+						Room:      "4201",
+						Building:  "HSSB",
+						Days:      "M",
+						BeginTime: "16:00",
+						EndTime:   "16:50",
+					},
+				},
+			},
+		},
+	},
+	{
+		CourseID:    "CHEM 1A",
+		Title:       "GEN CHEM",
+		SubjectArea: "CHEM",
+		EnrollCode:  "04549",
+		Room:        "1910",
+		Building:    "BUCHN",
+		Days:        "M W F",
+		BeginTime:   "10:00",
+		EndTime:     "10:50",
+		ClassSections: []models.Section{
+			{
+				EnrollCode: "57968",
+				Number:     "0201",
+				TimeLocations: []models.TimeLocation{
+					{
+						Room:      "2115",
+						Building:  "GIRV",
+						Days:      "F",
+						BeginTime: "09:00",
+						EndTime:   "09:50",
+					},
+				},
+			},
+		},
+	},
+}

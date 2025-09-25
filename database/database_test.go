@@ -158,11 +158,11 @@ func TestQuery(t *testing.T)  {
     if err != nil  {
         t.Fatalf("Failed to reset: %v", err)
     }
-    err = InsertAllClasses(Test1, db)
+    err = InsertAllClasses(Test2, db)
     if err != nil  {
         t.Fatalf("Failed to Insert Classes: %v", err)
     }
-    classes, err := QueryTitle("CMPSC", db)
+    classes, err := QueryTitle("CHEM", db)
     if err != nil  {
         t.Fatalf("Failed to Query Classes: \n%v", err)
     }
