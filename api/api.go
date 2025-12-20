@@ -73,6 +73,7 @@ func getMainTime(c models.Class) ([]models.Class, error)  {
     var classes []models.Class
     dic := make(map[string][]models.Section)
     for _, s := range c.ClassSections {
+        if len(s.Number) < 2 { continue }
         firstTwo := s.Number[:2]
         dic[firstTwo] = append(dic[firstTwo], s)
     }
@@ -83,7 +84,14 @@ func getMainTime(c models.Class) ([]models.Class, error)  {
             Title: c.Title,
             SubjectArea: c.SubjectArea,
         }
-        a,_ := getMainSection(key, value)
+        a, err := getMainSection(key, value)
+        if err != nil {
+            continue 
+        }
+
+        if len(value[a].TimeLocations) == 0 {
+            continue 
+        }
 
         cur.ClassSections = value 
         s := value[a].TimeLocations[0]

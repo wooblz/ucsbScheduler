@@ -4,27 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UCSB Scheduler</title>
+    
+    <script src='https://cdn.jsdelivr.net/npm/rrule@2.6.4/dist/es5/rrule.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@6.1.10/index.global.min.js'></script>
+
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        body { font-family: sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
         .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
         .search-box input { flex-grow: 1; padding: 8px; }
         .result-item { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
         .section-item { margin-left: 20px; padding: 5px; border-left: 2px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        
         .cart { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #b0d4f1; }
-        button { cursor: pointer; padding: 5px 10px; }
-        .btn-add { background: #007bff; color: white; border: none; border-radius: 3px; }
-        .btn-dl { background: #28a745; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; width: 100%; }
-        .btn-dl:disabled { background: #ccc; }
+        .cart-controls { display: flex; gap: 10px; margin-top: 10px; }
+        
+        button { cursor: pointer; padding: 10px; border-radius: 5px; border: none; font-size: 14px; }
+        .btn-add { background: #007bff; color: white; padding: 5px 10px; }
+        .btn-dl { background: #28a745; color: white; flex: 1; }
+        .btn-prev { background: #17a2b8; color: white; flex: 1; }
+        .btn-dl:disabled, .btn-prev:disabled { background: #ccc; cursor: not-allowed; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 5px; width: 90%; height: 80%; overflow: hidden; display: flex; flex-direction: column; }
+        .close-btn { align-self: flex-end; font-size: 24px; cursor: pointer; }
+        #calendar { flex-grow: 1; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>UCSB Calendar Generator</h1>
+    <h1>UCSB Calendar Generator (Winter 2026)</h1>
 
     <div class="cart">
         <h3>Selected Classes (<span id="count">0</span>)</h3>
         <ul id="selected-list"></ul>
-        <button id="dl-btn" class="btn-dl" onclick="downloadICS()" disabled>Download .ICS File</button>
+        <div class="cart-controls">
+            <button id="prev-btn" class="btn-prev" onclick="previewCalendar()" disabled>Preview Calendar</button>
+            <button id="dl-btn" class="btn-dl" onclick="downloadICS()" disabled>Download .ICS File</button>
+        </div>
     </div>
 
     <div class="search-box">
@@ -33,9 +50,19 @@
 
     <div id="results"></div>
 
+    <div id="calModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
     <script>
         let selectedItems = [];
         let debounceTimer;
+        let calendar = null;
+
+        const QUARTER = "20261"; 
 
         function handleTyping() {
             clearTimeout(debounceTimer);
@@ -51,6 +78,7 @@
 
             try {
                 const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                if (!res.ok) throw new Error("Search failed");
                 const data = await res.json();
                 
                 const container = document.getElementById('results');
@@ -86,7 +114,7 @@
                     container.appendChild(div);
                 });
             } catch (error) {
-                console.error("Search failed", error);
+                console.error(error);
             }
         }
 
@@ -100,6 +128,7 @@
             document.getElementById('count').innerText = selectedItems.length;
             document.getElementById('selected-list').innerHTML = selectedItems.map(i => `<li>${i.name} (${i.code})</li>`).join('');
             document.getElementById('dl-btn').disabled = selectedItems.length === 0;
+            document.getElementById('prev-btn').disabled = selectedItems.length === 0;
         }
 
         async function downloadICS() {
@@ -107,7 +136,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    quarter: "20251",
+                    quarter: QUARTER,
                     enrollCodes: selectedItems.map(i => i.code)
                 })
             });
@@ -125,6 +154,57 @@
             document.body.appendChild(a);
             a.click();
             a.remove();
+        }
+
+        async function previewCalendar() {
+            const response = await fetch('/api/calendar?format=preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    quarter: QUARTER,
+                    enrollCodes: selectedItems.map(i => i.code)
+                })
+            });
+
+            if (!response.ok) {
+                alert("Error generating preview");
+                return;
+            }
+
+            const events = await response.json();
+            
+            document.getElementById('calModal').style.display = 'block';
+            
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                initialDate: '2026-01-05', 
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                slotMinTime: "08:00:00",
+                slotMaxTime: "22:00:00",
+                events: events,
+                height: '100%'
+            });
+            calendar.render();
+        }
+
+        function closeModal() {
+            document.getElementById('calModal').style.display = 'none';
+            if (calendar) {
+                calendar.destroy();
+                calendar = null;
+            }
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('calModal');
+            if (event.target == modal) {
+                closeModal();
+            }
         }
     </script>
 </body>
