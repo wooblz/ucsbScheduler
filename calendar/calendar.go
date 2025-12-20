@@ -1,141 +1,154 @@
 package calendar
 
-import  (
-    "fmt"
-    "strings"
-    "time"
-    "github.com/arran4/golang-ical"
-    "github.com/google/uuid"
-    "github.com/wooblz/ucsbScheduler/models"
-    "github.com/wooblz/ucsbScheduler/api"
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	ics "github.com/arran4/golang-ical"
+	"github.com/google/uuid"
+	"github.com/wooblz/ucsbScheduler/models"
 )
 
-var dayMap2 = map[rune]int  {
-    "M": 4,
-    "T": 5,
-    "W": 6,
-    "R": 0,
-    "F": 1,
-}
-func createEvent(uid, summary, location, description, rule string, start, end time.Time cal *ics.Calendar) error  {
-    class := cal.AddEvent(uid)
-    class.SetSummary(summary)
-    class.SetLocation(location)
-    class.SetDescription(description)
-    class.SetStartAt(start)
-    class.SetEndAt(end)
-    class.AddRrule(rule)
-}
-func GenICS(classes []models.Class, finals map[string]models.Final, quarterStart, quarterEnd time.Time) ([]byte, error, int)  {
-    cal := ics.NewCalendar()
-    
-    for i, c := range classes  {
-        uid := fmt.Sprintf("%s@ucsbCalendar.com", uuid.NewString())
-        courseID := strings.Join(strings.Fields(c.CourseID))
-        summary := fmt.Sprintf("%s: %s", courseID, c.Title)
-        location := fmt.Sprintf("%s-%s", c.Building, c.Room))
-        description := c.SubjectArea
-        
-        beginTime, err := time.Parse("22:22", c.BeginTime)
-        if err != nil  {
-            return nil, err, i
-        }
-        endTime, err := time.Parse("22:22", c.EndTime)
-        if err != nil  {
-            return  nil, err, i
-        }
-
-        classDays := parseDays(c.Days)
-        firstClassDay := dayMap2[classDays[0]]
-
-        start := time.Date(quarterStart.Year(), quarterStart.Month(),quarterStart.Day(),beginTime.Hour(), beginTime.Minute())
-        start.AddDate(0,0,firstClassDay)
-        end := time.Date(quarterStart.Year(), quarterStart.Month(),quarterStart.Day(),endTime.Hour(), endTime.Minute())
-        end.AddDate(0,0,firstClassDay)
-        
-        rule := fmt.Sprintf("FREQ=WEEKLY;UNTIL=%s;BYDAY=%s",quarterEnd.Format("20251205T150000Z"),classDays)
-        err = createEvent(uid, summary, locaiton, description, rule, start, end, cal)
-        if err != nil  {
-            return nil, err, i
-        }
-        if finals != nil  {
-            if f, ok := finals[c.CourseID]; ok && f.HasFinals  {
-                uid = fmt.Sprintf("%s@ucsbCalendar.com", uuid.NewString())
-                summary = fmt.Sprintf("Final-%s", summary) 
-                location = ""
-                descrption = ""
-                examDay, err  := time.Parse("20250320", f.ExamDate)
-                if err != nil  {
-                   return nil, err, i 
-                }
-                examStart, err := time.Parse("12:04", f.BeginTime)
-                if err != nil  {
-                    return nil, err, i
-                }
-                examEnd, err := time.Parse("12:04", f.EndTime)
-                if err != nil  {
-                    return nil, err, i
-                }
-
-                start = time.Date(examDay.Year(), examDay.Month(), examDay.Day(), examStart.Hour(),examStart.Minute())
-                end = time.Date(examDay.Year(), examDay.Month(), examDay.Day(), examEnd.Hour(),examEnd.Minute())
-                err = creatEven(uid,summary, location, "", "", "", start, end, cal )
-                if err != nil  {
-                    return nil, err, i
-                }
-                
-            }
-        }
-        if len(c.ClassSections) < 1  {
-            continue
-        }
-        t := c.ClassSections[0].TimeLocations[0]
-        uid = fmt.Sprintf("%s@ucsbCalendar.com", uuid.NewString())
-        summary = fmt.Sprintf("Section-%s: %s", courseID, c.Title)
-        location = fmt.Sprintf("%s-%s", t.Building, t.Room))
-        description = fmt.Sprintf("Section")
-        
-        beginTime, err = time.Parse("22:22", t.BeginTime)
-        if err != nil  {
-            return nil, err, i
-        }
-        endTime, err = time.Parse("22:22", t.EndTime)
-        if err != nil  {
-            return  nil, err, i
-        }
-
-        sectionDays := parseDays(t.Days)
-        firstSectionDay := dayMap2[sectionDays[0]]
-
-        start = time.Date(quarterStart.Year(), quarterStart.Month(),quarterStart.Day(),beginTime.Hour(), beginTime.Minute())
-        start.AddDate(0,0,firstSectionDay)
-        end = time.Date(quarterStart.Year(), quarterStart.Month(),quarterStart.Day(),endTime.Hour(), endTime.Minute())
-        end.AddDate(0,0,firstSectionDay)
-        
-        rule = fmt.Sprintf("FREQ=WEEKLY;UNTIL=%s;BYDAY=%s",quarterEnd.Format("20251205T150000Z"),sectionDays)
-        err = createEvent(uid, summary, locaiton, description, rule, start, end, cal)
-        if err != nil  {
-            return nil, err,i
-        }
-    }
-    return []byte(cal.Serialize()), nil, -1
+var iCalDayMap = map[string]string{
+	"M": "MO", "T": "TU", "W": "WE", "R": "TH", "F": "FR", "S": "SA", "U": "SU",
 }
 
-var dayMap = map[rune]string  {
-    "M": "MO",
-    "T": "TU",
-    "W": "WE",
-    "R": "TH",
-    "F": "FR",
-    "S": "SA",
-    "U": "SU",
+var weekDayMap = map[string]time.Weekday{
+	"M": time.Monday,
+	"T": time.Tuesday,
+	"W": time.Wednesday,
+	"R": time.Thursday,
+	"F": time.Friday,
+	"S": time.Saturday,
+	"U": time.Sunday,
 }
+
+func createEvent(uid, summary, location, description, rule string, start, end time.Time, cal *ics.Calendar) {
+	event := cal.AddEvent(uid)
+	event.SetSummary(summary)
+	event.SetLocation(location)
+	event.SetDescription(description)
+	event.SetStartAt(start)
+	event.SetEndAt(end)
+	if rule != "" {
+		event.AddRrule(rule)
+	}
+}
+
+func GenICS(classes []models.Class, finals map[string]models.Final, quarterStart, quarterEnd time.Time) ([]byte, error, int) {
+	cal := ics.NewCalendar()
+	cal.SetMethod(ics.MethodRequest)
+
+	for i, c := range classes {
+		uid := fmt.Sprintf("%s@ucsbCalendar.com", uuid.NewString())
+		courseID := strings.Join(strings.Fields(c.CourseID), " ")
+		summary := fmt.Sprintf("%s: %s", courseID, c.Title)
+		location := fmt.Sprintf("%s-%s", c.Building, c.Room)
+		description := c.SubjectArea
+
+		beginTime, err := time.Parse("15:04", c.BeginTime)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing begin time for %s: %v", c.CourseID, err), i
+		}
+		endTime, err := time.Parse("15:04", c.EndTime)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing end time for %s: %v", c.CourseID, err), i
+		}
+
+		firstDayChar := getFirstDayChar(c.Days)
+		startDate := calcStartDate(quarterStart, firstDayChar)
+
+		start := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), beginTime.Hour(), beginTime.Minute(), 0, 0, time.Local)
+		end := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), endTime.Hour(), endTime.Minute(), 0, 0, time.Local)
+
+		classDays := parseDays(c.Days)
+		rule := fmt.Sprintf("FREQ=WEEKLY;UNTIL=%s;BYDAY=%s", quarterEnd.Format("20060102T150405Z"), classDays)
+
+		createEvent(uid, summary, location, description, rule, start, end, cal)
+
+		if finals != nil {
+			if f, ok := finals[c.EnrollCode]; ok && f.HasFinals {
+				finalUid := fmt.Sprintf("FINAL-%s@ucsbCalendar.com", uuid.NewString())
+				finalSummary := fmt.Sprintf("Final-%s", summary)
+
+				examDay, err := time.Parse("20060102", f.ExamDate)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing exam date for %s: %v", c.CourseID, err), i
+				}
+				examStart, err := time.Parse("15:04", f.BeginTime)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing exam start for %s: %v", c.CourseID, err), i
+				}
+				examEnd, err := time.Parse("15:04", f.EndTime)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing exam end for %s: %v", c.CourseID, err), i
+				}
+
+				fStart := time.Date(examDay.Year(), examDay.Month(), examDay.Day(), examStart.Hour(), examStart.Minute(), 0, 0, time.Local)
+				fEnd := time.Date(examDay.Year(), examDay.Month(), examDay.Day(), examEnd.Hour(), examEnd.Minute(), 0, 0, time.Local)
+
+				createEvent(finalUid, finalSummary, location, "Final Exam", "", fStart, fEnd, cal)
+			}
+		}
+
+		if len(c.ClassSections) > 0 && len(c.ClassSections[0].TimeLocations) > 0 {
+			t := c.ClassSections[0].TimeLocations[0]
+
+			secUid := fmt.Sprintf("%s-SEC@ucsbCalendar.com", uuid.NewString())
+			secSummary := fmt.Sprintf("Section-%s: %s", courseID, c.Title)
+			secLocation := fmt.Sprintf("%s-%s", t.Building, t.Room)
+			secDescription := "Section"
+
+			secBegin, err := time.Parse("15:04", t.BeginTime)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing section begin time: %v", err), i
+			}
+			secEnd, err := time.Parse("15:04", t.EndTime)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing section end time: %v", err), i
+			}
+
+			secFirstDayChar := getFirstDayChar(t.Days)
+			secStartDate := calcStartDate(quarterStart, secFirstDayChar)
+
+			secStart := time.Date(secStartDate.Year(), secStartDate.Month(), secStartDate.Day(), secBegin.Hour(), secBegin.Minute(), 0, 0, time.Local)
+			secEndT := time.Date(secStartDate.Year(), secStartDate.Month(), secStartDate.Day(), secEnd.Hour(), secEnd.Minute(), 0, 0, time.Local)
+
+			secDays := parseDays(t.Days)
+			secRule := fmt.Sprintf("FREQ=WEEKLY;UNTIL=%s;BYDAY=%s", quarterEnd.Format("20060102T150405Z"), secDays)
+
+			createEvent(secUid, secSummary, secLocation, secDescription, secRule, secStart, secEndT, cal)
+		}
+	}
+
+	return []byte(cal.Serialize()), nil, -1
+}
+
+func calcStartDate(quarterStart time.Time, dayChar string) time.Time {
+	targetDay, ok := weekDayMap[dayChar]
+	if !ok {
+		return quarterStart
+	}
+	daysToAdd := (int(targetDay) - int(quarterStart.Weekday()) + 7) % 7
+	return quarterStart.AddDate(0, 0, daysToAdd)
+}
+
+func getFirstDayChar(daysStr string) string {
+	daysStr = strings.TrimSpace(daysStr)
+	if len(daysStr) > 0 {
+		return string(daysStr[0])
+	}
+	return "M"
+}
+
 func parseDays(s string) string {
-    var parts []string
-    for _, c := range strings.TrimSpace(s)  {
-        if ic, ok := dayMap[c]; ok  {
-            parts = append(parts,ic)
-        }
-    }
-    return strings.Join(parts,",")
+	var parts []string
+	for _, r := range strings.ReplaceAll(s, " ", "") {
+		c := string(r)
+		if ic, ok := iCalDayMap[c]; ok {
+			parts = append(parts, ic)
+		}
+	}
+	return strings.Join(parts, ",")
 }

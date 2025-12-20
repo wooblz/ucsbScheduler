@@ -10,17 +10,12 @@ import (
     "errors"
     "fmt"
     "github.com/wooblz/ucsbScheduler/models"
-    "github.com/joho/godotenv"
 )
 var loadSize = 500
 //"https://api.ucsb.edu/academics/curriculums/v3/classes/search"
 func GetAllCourses(quarter int, client *http.Client, baseURL string) ([]models.Class, error) {
     if len(strconv.Itoa(quarter)) != 5  {
         return nil, errors.New("Invalid quarter, YYYYQ format")
-    }
-    err := godotenv.Load("../.env")
-    if err != nil   {
-        return nil, err
     }
     api_key := os.Getenv("API_KEY")
 
@@ -117,10 +112,6 @@ func getMainSection(code string, sections []models.Section) (int, error)  {
 func GetFinal(quarter int, enrollCode string, baseURL string, client *http.Client) (models.Final,error) {
     if len(strconv.Itoa(quarter)) != 5  {
         return models.Final{}, errors.New("Invalid quarter, YYYYQ format")
-    }
-    err := godotenv.Load("../.env")
-    if err != nil   {
-        return models.Final{}, err
     }
     api_key := os.Getenv("API_KEY")
     parameters := url.Values{}

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCSB Scheduler</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .search-box { margin-bottom: 20px; }
+        .result-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .section-item { margin-left: 20px; padding: 5px; border-left: 2px solid #eee; }
+        .cart { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        button { cursor: pointer; padding: 5px 10px; }
+        .btn-add { background: #007bff; color: white; border: none; border-radius: 3px; }
+        .btn-dl { background: #28a745; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>UCSB Calendar Generator</h1>
+
+    <div class="cart">
+        <h3>Selected Classes: <span id="count">0</span></h3>
+        <ul id="selected-list"></ul>
+        <button class="btn-dl" onclick="downloadICS()">Download .ICS File</button>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="query" placeholder="Search (e.g. CMPSC 16)" style="width: 70%; padding: 8px;">
+        <button onclick="searchClasses()" style="padding: 8px;">Search</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        let selectedCodes = [];
+
+        async function searchClasses() {
+            const query = document.getElementById('query').value;
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            
+            const container = document.getElementById('results');
+            container.innerHTML = '';
+
+            if (!data) {
+                container.innerHTML = '<p>No results found.</p>';
+                return;
+            }
+
+            data.forEach(cls => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                
+                let html = `<strong>${cls.courseId} - ${cls.title}</strong><br>
+                            Lecture: ${cls.days} ${cls.beginTime}-${cls.endTime} (${cls.building} ${cls.room})<br>`;
+                
+                if (cls.classSections && cls.classSections.length > 0) {
+                    html += `<div style="margin-top:5px; font-size: 0.9em; color: #555;">Sections:</div>`;
+                    cls.classSections.forEach(sec => {
+                        const t = sec.timeLocations[0];
+                        html += `
+                        <div class="section-item">
+                            ${sec.section} - ${t.days} ${t.beginTime}-${t.endTime} 
+                            <button class="btn-add" onclick="addCode('${sec.enrollCode}', '${cls.courseId} Section ${sec.section}')">Select</button>
+                        </div>`;
+                    });
+                } else {
+                    if (cls.enrollCode) { 
+                         html += `<button class="btn-add" onclick="addCode('${cls.enrollCode}', '${cls.courseId} Lecture')">Select Lecture</button>`;
+                    }
+                }
+                div.innerHTML = html;
+                container.appendChild(div);
+            });
+        }
+
+        function addCode(code, name) {
+            if (selectedCodes.includes(code)) return;
+            selectedCodes.push(code);
+            updateCart();
+        }
+
+        function updateCart() {
+            document.getElementById('count').innerText = selectedCodes.length;
+            const list = document.getElementById('selected-list');
+            list.innerHTML = selectedCodes.map(c => `<li>${c}</li>`).join('');
+        }
+
+        async function downloadICS() {
+            if (selectedCodes.length === 0) {
+                alert("Please select at least one class.");
+                return;
+            }
+
+            const response = await fetch('/api/calendar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    quarter: "20251",
+                    enrollCodes: selectedCodes
+                })
+            });
+
+            if (!response.ok) {
+                alert("Error generating calendar");
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "ucsb_schedule.ics";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+    </script>
+</body>
+</html>

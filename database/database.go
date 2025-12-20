@@ -7,16 +7,11 @@ import (
     "database/sql"
     _ "github.com/lib/pq"
     "github.com/wooblz/ucsbScheduler/models"
-    "github.com/joho/godotenv"
 )
 
 const url string = "DB_URL"
 
 func StartDB(name string) (*sql.DB, error)  {
-    err := godotenv.Load("../.env")
-    if err != nil   {
-        return nil, err
-    }
     db_url := os.Getenv(name)
     db, err := sql.Open("postgres", db_url)
     if err != nil  {
@@ -200,4 +195,52 @@ func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
         classes = append(classes,c)
     }
     return classes, nil
+}
+func GetSelectedClass(enrollCode string, db *sql.DB) (models.Class, error) {
+	var c models.Class
+	var sEnroll, sRoom, sBuild, sDays, sBegin, sEnd string
+
+	row := db.QueryRow(`
+		SELECT 
+			c.course_id, c.title, c.subject_area, c.enroll_code, c.room, c.building, c.days, c.begin_time, c.end_time,
+			s.enroll_code, tl.room, tl.building, tl.days, tl.begin_time, tl.end_time
+		FROM sections s
+		JOIN classes c ON s.course_id = c.id
+		JOIN time_locations tl ON tl.section_id = s.id
+		WHERE s.enroll_code = $1
+	`, enrollCode)
+
+	err := row.Scan(
+		&c.CourseID, &c.Title, &c.SubjectArea, &c.EnrollCode, &c.Room, &c.Building, &c.Days, &c.BeginTime, &c.EndTime,
+		&sEnroll, &sRoom, &sBuild, &sDays, &sBegin, &sEnd,
+	)
+
+	if err == nil {
+		c.ClassSections = []models.Section{
+			{
+				EnrollCode: sEnroll,
+				TimeLocations: []models.TimeLocation{
+					{Room: sRoom, Building: sBuild, Days: sDays, BeginTime: sBegin, EndTime: sEnd},
+				},
+			},
+		}
+		return c, nil
+	}
+
+	row = db.QueryRow(`
+		SELECT course_id, title, subject_area, enroll_code, room, building, days, begin_time, end_time
+		FROM classes 
+		WHERE enroll_code = $1
+	`, enrollCode)
+
+	err = row.Scan(
+		&c.CourseID, &c.Title, &c.SubjectArea, &c.EnrollCode, &c.Room, &c.Building, &c.Days, &c.BeginTime, &c.EndTime,
+	)
+
+	if err != nil {
+		return models.Class{}, fmt.Errorf("enroll code %s not found", enrollCode)
+	}
+
+	c.ClassSections = []models.Section{}
+	return c, nil
 }
