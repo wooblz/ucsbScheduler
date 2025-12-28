@@ -92,6 +92,7 @@ func main() {
 
 func handleSearch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	query := r.URL.Query().Get("q")
+	log.Printf("Search Request: %s", query)
 	if query == "" {
 		http.Error(w, "Missing query parameter", http.StatusBadRequest)
 		return
@@ -113,6 +114,8 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("Calendar Request: Quarter=%s, Codes=%v, Format=%s", req.Quarter, req.EnrollCodes, format)
 
 	quarterInt, err := strconv.Atoi(req.Quarter)
 	if err != nil {
@@ -140,6 +143,11 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	start, instrEnd, qEnd := getQuarterDates()
+
+	// If preview, only show one week of events
+	if format == "preview" {
+		instrEnd = start.AddDate(0, 0, 7)
+	}
 
 	if format == "preview" {
 		events, err := calendar.GenerateEvents(selectedClasses, finalsMap, start, instrEnd, qEnd)
