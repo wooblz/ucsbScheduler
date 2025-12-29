@@ -46,34 +46,27 @@ func main() {
 		log.Println("Error checking database count:", err)
 	}
 
+    /*
 	fmt.Print("Do you want to repopulate the database? (Y/N): ")
 	var input string
 	fmt.Scanln(&input)
 
 	if count == 0 || input == "Y" || input == "y" {
-		log.Println("Clearing existing database...")
-		err = database.ResetDB(db)
-		if err != nil {
-			log.Fatal("Failed to reset database: ", err)
-		}
+		refreshDatabase(db)
+	}*/
 
-		apiKey := os.Getenv("API_KEY")
-		if apiKey == "" {
-			log.Fatal("API_KEY not set in .env")
+	go func() {
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				log.Println("Starting scheduled 24-hour database refresh...")
+				refreshDatabase(db)
+				log.Println("Database refresh completed.")
+			}
 		}
-
-		client := &http.Client{Timeout: 60 * time.Second}
-		courses, err := api.GetAllCourses(20261, client, "https://api.ucsb.edu/academics/curriculums/v3/classes/search")
-		if err != nil {
-			log.Fatal("Failed to fetch courses: ", err)
-		}
-
-		err = database.InsertAllClasses(courses, db)
-		if err != nil {
-			log.Fatal("Failed to insert courses: ", err)
-		}
-		log.Println("Database successfully populated")
-	}
+	}()
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
@@ -88,6 +81,35 @@ func main() {
 
 	log.Println("Server starting on :8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func refreshDatabase(db *sql.DB) {
+	log.Println("Clearing existing database...")
+	err := database.ResetDB(db)
+	if err != nil {
+		log.Println("Failed to reset database: ", err)
+		return
+	}
+
+	apiKey := os.Getenv("API_KEY")
+	if apiKey == "" {
+		log.Println("API_KEY not set in .env")
+		return
+	}
+
+	client := &http.Client{Timeout: 60 * time.Second}
+	courses, err := api.GetAllCourses(20261, client, "https://api.ucsb.edu/academics/curriculums/v3/classes/search")
+	if err != nil {
+		log.Println("Failed to fetch courses: ", err)
+		return
+	}
+
+	err = database.InsertAllClasses(courses, db)
+	if err != nil {
+		log.Println("Failed to insert courses: ", err)
+		return
+	}
+	log.Println("Database successfully populated")
 }
 
 func handleSearch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
@@ -124,10 +146,14 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	var selectedClasses []models.Class
 	finalsMap := make(map[string]models.Final)
+	selectedCodeMap := make(map[string]bool) 
+
 	client := &http.Client{}
 	baseURL := "https://api.ucsb.edu/academics/curriculums/v3/finals"
 
 	for _, code := range req.EnrollCodes {
+		selectedCodeMap[code] = true 
+
 		cls, err := database.GetSelectedClass(code, db)
 		if err != nil {
 			continue
@@ -144,13 +170,9 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	start, instrEnd, qEnd := getQuarterDates()
 
-	// If preview, only show one week of events
 	if format == "preview" {
 		instrEnd = start.AddDate(0, 0, 7)
-	}
-
-	if format == "preview" {
-		events, err := calendar.GenerateEvents(selectedClasses, finalsMap, start, instrEnd, qEnd)
+		events, err := calendar.GenerateEvents(selectedClasses, finalsMap, start, instrEnd, qEnd, selectedCodeMap)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -158,7 +180,8 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(events)
 	} else {
-		icsData, err := calendar.GenICS(selectedClasses, finalsMap, start, instrEnd, qEnd)
+		// Pass selectedCodeMap
+		icsData, err := calendar.GenICS(selectedClasses, finalsMap, start, instrEnd, qEnd, selectedCodeMap)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -170,8 +193,14 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 }
 
 func getQuarterDates() (time.Time, time.Time, time.Time) {
-	start := time.Date(2026, 1, 5, 0, 0, 0, 0, time.Local)
-	instrEnd := time.Date(2026, 3, 13, 23, 59, 59, 0, time.Local)
-	qEnd := time.Date(2026, 3, 20, 23, 59, 59, 0, time.Local)
+	loc, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		log.Println("Warning: Could not load America/Los_Angeles location, defaulting to Local")
+		loc = time.Local
+	}
+
+	start := time.Date(2026, 1, 5, 0, 0, 0, 0, loc)
+	instrEnd := time.Date(2026, 3, 13, 23, 59, 59, 0, loc)
+	qEnd := time.Date(2026, 3, 20, 23, 59, 59, 0, loc)
 	return start, instrEnd, qEnd
 }

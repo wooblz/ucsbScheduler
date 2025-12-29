@@ -29,37 +29,48 @@ type Event struct {
 	Color       string `json:"color,omitempty"`
 }
 
-func GenerateEvents(classes []models.Class, finals map[string]models.Final, quarterStart, instructionEnd, quarterEnd time.Time) ([]Event, error) {
+func GenerateEvents(classes []models.Class, finals map[string]models.Final, quarterStart, instructionEnd, quarterEnd time.Time, selectedCodes map[string]bool) ([]Event, error) {
 	var events []Event
+	loc := quarterStart.Location()
+
+	seenLectures := make(map[string]bool)
 
 	for _, c := range classes {
 		courseID := strings.Join(strings.Fields(c.CourseID), " ")
-		summary := fmt.Sprintf("%s: %s", courseID, c.Title)
-		location := fmt.Sprintf("%s-%s", c.Building, c.Room)
-
+		
 		if c.Days != "" && c.BeginTime != "" && c.EndTime != "" {
-			ev, err := createRecurringEvent(
-				summary, location, c.SubjectArea, "#3788d8",
-				c.Days, c.BeginTime, c.EndTime,
-				quarterStart, instructionEnd,
-			)
-			if err != nil { return nil, err }
-			events = append(events, ev)
-		}
-
-		if len(c.ClassSections) > 0 && len(c.ClassSections[0].TimeLocations) > 0 {
-			t := c.ClassSections[0].TimeLocations[0]
-			secSummary := fmt.Sprintf("Section-%s", courseID)
-			secLocation := fmt.Sprintf("%s-%s", t.Building, t.Room)
-
-			if t.Days != "" && t.BeginTime != "" && t.EndTime != "" {
+			if !seenLectures[courseID] {
+				summary := fmt.Sprintf("%s: %s", courseID, c.Title)
+				location := fmt.Sprintf("%s-%s", c.Building, c.Room)
+				
 				ev, err := createRecurringEvent(
-					secSummary, secLocation, "Section", "#28a745",
-					t.Days, t.BeginTime, t.EndTime,
+					summary, location, c.SubjectArea, "#3788d8",
+					c.Days, c.BeginTime, c.EndTime,
 					quarterStart, instructionEnd,
 				)
 				if err != nil { return nil, err }
 				events = append(events, ev)
+				seenLectures[courseID] = true
+			}
+		}
+
+		if len(c.ClassSections) > 0 {
+			for _, t := range c.ClassSections {
+				if selectedCodes[t.EnrollCode] && len(t.TimeLocations) > 0 {
+					tl := t.TimeLocations[0]
+					if tl.Days != "" && tl.BeginTime != "" && tl.EndTime != "" {
+						secSummary := fmt.Sprintf("Section-%s", courseID)
+						secLocation := fmt.Sprintf("%s-%s", tl.Building, tl.Room)
+
+						ev, err := createRecurringEvent(
+							secSummary, secLocation, "Section", "#28a745",
+							tl.Days, tl.BeginTime, tl.EndTime,
+							quarterStart, instructionEnd,
+						)
+						if err != nil { return nil, err }
+						events = append(events, ev)
+					}
+				}
 			}
 		}
 
@@ -74,14 +85,14 @@ func GenerateEvents(classes []models.Class, finals map[string]models.Final, quar
 				examEnd, err := time.Parse("15:04", f.EndTime)
 				if err != nil { continue }
 
-				fStart := time.Date(examDay.Year(), examDay.Month(), examDay.Day(), examStart.Hour(), examStart.Minute(), 0, 0, time.Local)
-				fEnd := time.Date(examDay.Year(), examDay.Month(), examDay.Day(), examEnd.Hour(), examEnd.Minute(), 0, 0, time.Local)
+				fStart := time.Date(examDay.Year(), examDay.Month(), examDay.Day(), examStart.Hour(), examStart.Minute(), 0, 0, loc)
+				fEnd := time.Date(examDay.Year(), examDay.Month(), examDay.Day(), examEnd.Hour(), examEnd.Minute(), 0, 0, loc)
 
 				events = append(events, Event{
 					Title:       finalSummary,
 					Start:       fStart.Format("2006-01-02T15:04:05"),
 					End:         fEnd.Format("2006-01-02T15:04:05"),
-					Location:    location,
+					Location:    fmt.Sprintf("%s-%s", c.Building, c.Room), // Fallback location
 					Description: "Final Exam",
 					Color:       "#dc3545",
 				})
@@ -100,7 +111,7 @@ func createRecurringEvent(title, location, desc, color, days, beginTimeStr, endT
 	firstDayChar := getFirstDayChar(days)
 	startDate := calcStartDate(qStart, firstDayChar)
 
-	start := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), beginTime.Hour(), beginTime.Minute(), 0, 0, time.Local)
+	start := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), beginTime.Hour(), beginTime.Minute(), 0, 0, startDate.Location())
 	
 	dur := endTime.Sub(beginTime)
 	hours := int(dur.Hours())
@@ -108,7 +119,8 @@ func createRecurringEvent(title, location, desc, color, days, beginTimeStr, endT
 	durationStr := fmt.Sprintf("%02d:%02d", hours, minutes)
 
 	classDays := parseDays(days)
-	untilStr := qEnd.UTC().Format("20060102T150405Z")
+	
+	untilStr := qEnd.Format("20060102T150405")
 	rrule := fmt.Sprintf("FREQ=WEEKLY;UNTIL=%s;BYDAY=%s", untilStr, classDays)
 
 	return Event{
@@ -122,12 +134,14 @@ func createRecurringEvent(title, location, desc, color, days, beginTimeStr, endT
 	}, nil
 }
 
-func GenICS(classes []models.Class, finals map[string]models.Final, quarterStart, instructionEnd, quarterEnd time.Time) ([]byte, error) {
-	events, err := GenerateEvents(classes, finals, quarterStart, instructionEnd, quarterEnd)
+func GenICS(classes []models.Class, finals map[string]models.Final, quarterStart, instructionEnd, quarterEnd time.Time, selectedCodes map[string]bool) ([]byte, error) {
+	events, err := GenerateEvents(classes, finals, quarterStart, instructionEnd, quarterEnd, selectedCodes)
 	if err != nil { return nil, err }
 
 	cal := ics.NewCalendar()
 	cal.SetMethod(ics.MethodRequest)
+	cal.SetVersion("2.0")
+	cal.SetProductId("-//UCSB Scheduler//EN")
 
 	for _, e := range events {
 		uid := fmt.Sprintf("%s@ucsbCalendar.com", uuid.NewString())
@@ -136,16 +150,25 @@ func GenICS(classes []models.Class, finals map[string]models.Final, quarterStart
 		event.SetLocation(e.Location)
 		event.SetDescription(e.Description)
 		
-		s, _ := time.ParseInLocation("2006-01-02T15:04:05", e.Start, time.Local)
-		event.SetStartAt(s)
+		startRaw := strings.ReplaceAll(strings.ReplaceAll(e.Start, "-", ""), ":", "")
+		event.SetProperty(ics.ComponentPropertyDtStart, startRaw)
 		
 		if e.RRule != "" {
 			event.AddRrule(e.RRule)
+			
+			// Calculate End Time for the FIRST instance
 			d, _ := time.ParseDuration(strings.Replace(e.Duration, ":", "h", 1) + "m")
-			event.SetEndAt(s.Add(d))
+			
+			// Parse e.Start just to add duration
+			sTime, _ := time.Parse("2006-01-02T15:04:05", e.Start) 
+			eTime := sTime.Add(d)
+			
+			endRaw := eTime.Format("20060102T150405")
+			event.SetProperty(ics.ComponentPropertyDtEnd, endRaw)
+
 		} else {
-			end, _ := time.ParseInLocation("2006-01-02T15:04:05", e.End, time.Local)
-			event.SetEndAt(end)
+			endRaw := strings.ReplaceAll(strings.ReplaceAll(e.End, "-", ""), ":", "")
+			event.SetProperty(ics.ComponentPropertyDtEnd, endRaw)
 		}
 	}
 	return []byte(cal.Serialize()), nil

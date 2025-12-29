@@ -5,42 +5,220 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UCSB Scheduler</title>
     
-    <script src='https://cdn.jsdelivr.net/npm/rrule@2.6.4/dist/es5/rrule.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@6.1.10/index.global.min.js'></script>
-
     <style>
-        body { font-family: sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
-        .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
-        .search-box input { flex-grow: 1; padding: 8px; }
-        .result-item { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
-        .section-item { margin-left: 20px; padding: 5px; border-left: 2px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        :root {
+            /* DEFAULT: Light Mode */
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --container-bg: #f8f9fa;
+            --border-color: #ccc;
+            --accent-color: #007bff;
+            --item-bg: #ffffff;
+            --cart-bg: #f0f8ff;
+            --button-text: #fff;
+            --table-header-bg: #f8f9fa;
+            --table-cell-bg: #fff;
+            --input-bg: #fff;
+            --input-text: #000;
+            
+            --card-bg: #e3f2fd;
+            --card-border: #2196f3;
+            --card-text: #000;
+            --final-bg: #fff3cd;
+            --final-border: #ffc107;
+        }
+
+        body.dark-mode {
+            /* Dark Mode Overrides */
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --container-bg: #1e1e1e;
+            --border-color: #333;
+            --accent-color: #3788d8;
+            --item-bg: #2c2c2c;
+            --cart-bg: #1e2a36;
+            --button-text: #fff;
+            --table-header-bg: #252525;
+            --table-cell-bg: #181818;
+            --input-bg: #2c2c2c;
+            --input-text: #fff;
+
+            --card-bg: #0277bd;
+            --card-border: #4fc3f7;
+            --card-text: #fff;
+            --final-bg: #ff8f00;
+            --final-border: #ffb300;
+        }
+
+        body { 
+            font-family: sans-serif; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
         
-        .cart { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #b0d4f1; }
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .theme-btn {
+            background: transparent;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        
+        .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
+        .search-box input { 
+            flex-grow: 1; 
+            padding: 8px; 
+            font-size: 16px; 
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        
+        .result-item { 
+            border: 1px solid var(--border-color); 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border-radius: 5px; 
+            background-color: var(--item-bg);
+        }
+        
+        .section-item { 
+            margin-left: 20px; 
+            padding: 5px; 
+            border-left: 2px solid var(--border-color); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
+        .cart { 
+            background: var(--cart-bg); 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 20px; 
+            border: 1px solid var(--border-color); 
+        }
+
+        #selected-list {
+            list-style: none;
+            padding: 0;
+        }
+        #selected-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
         .cart-controls { display: flex; gap: 10px; margin-top: 10px; }
         
         button { cursor: pointer; padding: 10px; border-radius: 5px; border: none; font-size: 14px; }
-        .btn-add { background: #007bff; color: white; padding: 5px 10px; }
-        .btn-dl { background: #28a745; color: white; flex: 1; }
-        .btn-prev { background: #17a2b8; color: white; flex: 1; }
-        .btn-dl:disabled, .btn-prev:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-add { background: var(--accent-color); color: var(--button-text); padding: 5px 10px; }
+        
+        .btn-rm { 
+            background: #dc3545; 
+            color: white; 
+            padding: 2px 8px; 
+            font-size: 12px; 
+            margin-left: 10px;
+        }
 
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 5px; width: 90%; height: 80%; overflow: hidden; display: flex; flex-direction: column; }
-        .close-btn { align-self: flex-end; font-size: 24px; cursor: pointer; }
-        #calendar { flex-grow: 1; margin-top: 10px; }
+        .btn-dl { background: #28a745; color: white; width: 100%; font-size: 16px; }
+        .btn-dl:disabled { background: #555; cursor: not-allowed; }
+
+        /* Schedule Table Styles */
+        #schedule-view { margin-top: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 800px; }
+        
+        th, td { 
+            border: 1px solid var(--border-color); 
+            padding: 8px; 
+            text-align: left; 
+            vertical-align: top; 
+        }
+        th { 
+            background-color: var(--table-header-bg); 
+            text-align: center; 
+            padding: 12px; 
+            font-weight: bold; 
+            color: var(--text-color);
+        }
+        td { 
+            height: 150px; 
+            background: var(--table-cell-bg); 
+        }
+        
+        .event-card { 
+            background: var(--card-bg);
+            color: var(--card-text);
+            border-left: 4px solid var(--card-border); 
+            padding: 6px; 
+            margin-bottom: 6px; 
+            border-radius: 3px; 
+            font-size: 0.85em; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .event-final {
+            background: var(--final-bg);
+            border-left-color: var(--final-border);
+        }
+
+        .event-time { font-weight: bold; display: block; margin-bottom: 2px; }
+        .event-loc { font-size: 0.9em; opacity: 0.9; }
     </style>
 </head>
 <body>
 
-    <h1>UCSB Calendar Generator (Winter 2026)</h1>
+    <div class="header-controls">
+        <h1>UCSB Calendar Generator (Winter 2026)</h1>
+        <button class="theme-btn" onclick="toggleTheme()">Switch to Dark Mode</button>
+    </div>
 
     <div class="cart">
         <h3>Selected Classes (<span id="count">0</span>)</h3>
         <ul id="selected-list"></ul>
         <div class="cart-controls">
-            <button id="prev-btn" class="btn-prev" onclick="previewCalendar()" disabled>Preview Calendar</button>
             <button id="dl-btn" class="btn-dl" onclick="downloadICS()" disabled>Download .ICS File</button>
+        </div>
+
+        <div id="schedule-view">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Finals</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="col-M"></td>
+                        <td id="col-T"></td>
+                        <td id="col-W"></td>
+                        <td id="col-R"></td>
+                        <td id="col-F"></td>
+                        <td id="col-Finals"></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -50,19 +228,21 @@
 
     <div id="results"></div>
 
-    <div id="calModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <div id="calendar"></div>
-        </div>
-    </div>
-
     <script>
         let selectedItems = [];
         let debounceTimer;
-        let calendar = null;
 
         const QUARTER = "20261"; 
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.theme-btn');
+            if (document.body.classList.contains('dark-mode')) {
+                btn.innerText = "Switch to Light Mode";
+            } else {
+                btn.innerText = "Switch to Dark Mode";
+            }
+        }
 
         function handleTyping() {
             clearTimeout(debounceTimer);
@@ -94,10 +274,10 @@
                     div.className = 'result-item';
                     
                     let html = `<strong>${cls.courseId} - ${cls.title}</strong><br>
-                                Lecture: ${cls.Days} ${cls.BeginTime}-${cls.EndTime} (${cls.Building} ${cls.Room})<br>`;
+                                <span style="font-size:0.9em; opacity:0.8">Lecture: ${cls.Days} ${cls.BeginTime}-${cls.EndTime} (${cls.Building} ${cls.Room})</span><br>`;
                     
                     if (cls.classSections && cls.classSections.length > 0) {
-                        html += `<div style="margin-top:5px; font-size: 0.9em; color: #555;">Sections:</div>`;
+                        html += `<div style="margin-top:5px; font-size: 0.9em; opacity: 0.7;">Sections:</div>`;
                         cls.classSections.forEach(sec => {
                             const t = sec.timeLocations[0];
                             const timeStr = t ? `${t.days} ${t.beginTime}-${t.endTime}` : "TBA";
@@ -124,11 +304,118 @@
             updateCart();
         }
 
+        function removeItem(code) {
+            selectedItems = selectedItems.filter(i => i.code !== code);
+            updateCart();
+        }
+
         function updateCart() {
             document.getElementById('count').innerText = selectedItems.length;
-            document.getElementById('selected-list').innerHTML = selectedItems.map(i => `<li>${i.name} (${i.code})</li>`).join('');
+            
+            document.getElementById('selected-list').innerHTML = selectedItems.map(i => `
+                <li>
+                    <span>${i.name} (${i.code})</span>
+                    <button class="btn-rm" onclick="removeItem('${i.code}')">Remove</button>
+                </li>
+            `).join('');
+
             document.getElementById('dl-btn').disabled = selectedItems.length === 0;
-            document.getElementById('prev-btn').disabled = selectedItems.length === 0;
+            updateScheduleTable();
+        }
+
+        async function updateScheduleTable() {
+            const cols = ['M', 'T', 'W', 'R', 'F', 'Finals'];
+            cols.forEach(c => document.getElementById('col-' + c).innerHTML = '');
+
+            if (selectedItems.length === 0) return;
+
+            try {
+                const response = await fetch('/api/calendar?format=preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        quarter: QUARTER,
+                        enrollCodes: selectedItems.map(i => i.code)
+                    })
+                });
+
+                if (!response.ok) return;
+
+                const events = await response.json();
+                
+                events.sort((a, b) => a.start.localeCompare(b.start));
+
+                events.forEach(ev => {
+                    const startDate = new Date(ev.start);
+                    let isFinal = false;
+
+                    // 1. Check if it's a Final
+                    if (ev.description === "Final Exam" || ev.title.includes("Final-")) {
+                        renderEventCard("Finals", ev, true, startDate);
+                        return;
+                    }
+
+                    // 2. Check for RRULE to find multiple days (FIX FOR MISSING DAYS)
+                    // Format example: FREQ=WEEKLY;UNTIL=...;BYDAY=MO,WE
+                    if (ev.rrule && ev.rrule.includes("BYDAY=")) {
+                        const byDayPart = ev.rrule.split('BYDAY=')[1].split(';')[0]; // "MO,WE"
+                        const days = byDayPart.split(','); // ["MO", "WE"]
+                        
+                        // Map ical days to our column IDs
+                        const dayMap = {"MO":"M", "TU":"T", "WE":"W", "TH":"R", "FR":"F"};
+                        
+                        days.forEach(d => {
+                            if (dayMap[d]) {
+                                renderEventCard(dayMap[d], ev, false, startDate);
+                            }
+                        });
+                    } else {
+                        // Fallback to single start date if no recurrence rule
+                        const jsDay = startDate.getDay(); // 0=Sun, 1=Mon...
+                        const dayMap = {1: 'M', 2: 'T', 3: 'W', 4: 'R', 5: 'F'};
+                        if (dayMap[jsDay]) {
+                            renderEventCard(dayMap[jsDay], ev, false, startDate);
+                        }
+                    }
+                });
+
+            } catch (e) {
+                console.error("Error updating schedule:", e);
+            }
+        }
+
+        function renderEventCard(colId, ev, isFinal, startDate) {
+            const div = document.createElement('div');
+            div.className = isFinal ? 'event-card event-final' : 'event-card';
+
+            let timeStr = "";
+            let endTimeStr = "";
+            
+            if (ev.duration) {
+                const [h, m] = ev.duration.split(':').map(Number);
+                const endDate = new Date(startDate.getTime() + (h * 60 * 60 * 1000) + (m * 60 * 1000));
+                endTimeStr = formatTime(endDate);
+                timeStr = formatTime(startDate) + " - " + endTimeStr;
+            } else if (ev.end) {
+                timeStr = formatTime(startDate) + " - " + formatTime(new Date(ev.end));
+            } else {
+                timeStr = formatTime(startDate);
+            }
+
+            let html = `<span class="event-time">${timeStr}</span>`;
+            html += `<strong>${ev.title}</strong><br>`;
+            html += `<span class="event-loc">${ev.location}</span>`;
+
+            if (isFinal) {
+                html += `<br><span style="font-size:0.8em; opacity: 0.9;">${startDate.toLocaleDateString()}</span>`;
+            }
+
+            div.innerHTML = html;
+            document.getElementById('col-' + colId).appendChild(div);
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         }
 
         async function downloadICS() {
@@ -154,63 +441,6 @@
             document.body.appendChild(a);
             a.click();
             a.remove();
-        }
-
-        async function previewCalendar() {
-            const response = await fetch('/api/calendar?format=preview', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    quarter: QUARTER,
-                    enrollCodes: selectedItems.map(i => i.code)
-                })
-            });
-
-            if (!response.ok) {
-                alert("Error generating preview");
-                return;
-            }
-
-            const events = await response.json();
-
-            console.log("Raw Events from Server:", events);
-            if (events.length > 0) {
-                console.log("First Event Start:", events[0].start);
-                console.log("First Event RRule:", events[0].rrule);
-            }
-            
-            document.getElementById('calModal').style.display = 'block';
-            
-            const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'timeGridWeek',
-                initialDate: '2026-01-05', 
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                },
-                slotMinTime: "08:00:00",
-                slotMaxTime: "22:00:00",
-                events: events,
-                height: '100%'
-            });
-            calendar.render();
-        }
-
-        function closeModal() {
-            document.getElementById('calModal').style.display = 'none';
-            if (calendar) {
-                calendar.destroy();
-                calendar = null;
-            }
-        }
-        
-        window.onclick = function(event) {
-            const modal = document.getElementById('calModal');
-            if (event.target == modal) {
-                closeModal();
-            }
         }
     </script>
 </body>
