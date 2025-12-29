@@ -349,14 +349,11 @@
                     const startDate = new Date(ev.start);
                     let isFinal = false;
 
-                    // 1. Check if it's a Final
                     if (ev.description === "Final Exam" || ev.title.includes("Final-")) {
                         renderEventCard("Finals", ev, true, startDate);
                         return;
                     }
 
-                    // 2. Check for RRULE to find multiple days (FIX FOR MISSING DAYS)
-                    // Format example: FREQ=WEEKLY;UNTIL=...;BYDAY=MO,WE
                     if (ev.rrule && ev.rrule.includes("BYDAY=")) {
                         const byDayPart = ev.rrule.split('BYDAY=')[1].split(';')[0]; // "MO,WE"
                         const days = byDayPart.split(','); // ["MO", "WE"]
@@ -370,7 +367,6 @@
                             }
                         });
                     } else {
-                        // Fallback to single start date if no recurrence rule
                         const jsDay = startDate.getDay(); // 0=Sun, 1=Mon...
                         const dayMap = {1: 'M', 2: 'T', 3: 'W', 4: 'R', 5: 'F'};
                         if (dayMap[jsDay]) {
