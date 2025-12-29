@@ -50,10 +50,14 @@ func main() {
 	fmt.Print("Do you want to repopulate the database? (Y/N): ")
 	var input string
 	fmt.Scanln(&input)
-
+    
 	if count == 0 || input == "Y" || input == "y" {
 		refreshDatabase(db)
-	}*/
+    }*/
+
+    if count == 0  {
+		refreshDatabase(db)
+	}
 
 	go func() {
 		ticker := time.NewTicker(24 * time.Hour)
