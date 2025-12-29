@@ -3,12 +3,13 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-//	"fmt"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+    "sync"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -16,6 +17,11 @@ import (
 	"github.com/wooblz/ucsbScheduler/calendar"
 	"github.com/wooblz/ucsbScheduler/database"
 	"github.com/wooblz/ucsbScheduler/models"
+)
+
+var (
+	calendarCount int
+	countMutex    sync.Mutex
 )
 
 type CalendarRequest struct {
@@ -83,6 +89,13 @@ func main() {
 		handleCalendar(w, r, db)
 	})
 
+    http.HandleFunc("/api/stats", func(w http.ResponseWriter, r *http.Request) {
+		countMutex.Lock()
+		val := calendarCount
+		countMutex.Unlock()
+		fmt.Fprintf(w, "Calendars generated since last restart: %d", val)
+	})
+
     port := os.Getenv("PORT")
     if port == "" {
         port = "8080"
@@ -138,6 +151,13 @@ func handleSearch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 }
 
 func handleCalendar(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+    countMutex.Lock()
+	calendarCount++
+	currentCount := calendarCount
+	countMutex.Unlock()
+
+	log.Printf("Calendar Generated! Total since restart: %d", currentCount)
+
 	format := r.URL.Query().Get("format")
 
 	var req CalendarRequest
