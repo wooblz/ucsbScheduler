@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -30,6 +30,7 @@ type CalendarRequest struct {
 }
 
 func main() {
+    calendarCount = 64
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found")
@@ -88,13 +89,14 @@ func main() {
 	http.HandleFunc("/api/calendar", func(w http.ResponseWriter, r *http.Request) {
 		handleCalendar(w, r, db)
 	})
-
+    
+    /*
     http.HandleFunc("/api/stats", func(w http.ResponseWriter, r *http.Request) {
 		countMutex.Lock()
 		val := calendarCount
 		countMutex.Unlock()
 		fmt.Fprintf(w, "Calendars generated since last restart: %d", val)
-	})
+	})*/
 
     port := os.Getenv("PORT")
     if port == "" {

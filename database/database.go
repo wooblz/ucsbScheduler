@@ -209,10 +209,15 @@ func GetSelectedClass(enrollCode string, db *sql.DB) (models.Class, error) {
 	row := db.QueryRow(`
 		SELECT 
 			c.course_id, c.title, c.subject_area, c.enroll_code, c.room, c.building, c.days, c.begin_time, c.end_time,
-			s.enroll_code, tl.room, tl.building, tl.days, tl.begin_time, tl.end_time
+			s.enroll_code, 
+			COALESCE(tl.room, ''), 
+			COALESCE(tl.building, ''), 
+			COALESCE(tl.days, ''), 
+			COALESCE(tl.begin_time, ''), 
+			COALESCE(tl.end_time, '')
 		FROM sections s
 		JOIN classes c ON s.course_id = c.id
-		JOIN time_locations tl ON tl.section_id = s.id
+		LEFT JOIN time_locations tl ON tl.section_id = s.id
 		WHERE s.enroll_code = $1
 	`, enrollCode)
 
