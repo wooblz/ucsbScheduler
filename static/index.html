@@ -191,214 +191,26 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
+        const { useState, useEffect } = React;
         const QUARTER = "20261";
 
-        // --- Helper Functions ---
+        // --- Helper: Format Dates for UI ---
         function formatTime(date) {
             return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         }
 
-        // --- Sub-components ---
-
-        const Header = ({ darkMode, toggleTheme }) => (
-            <div className="header-controls">
-                <h1>UCSB Calendar Generator (Winter 2026)</h1>
-                <button className="theme-btn" onClick={toggleTheme}>
-                    {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                </button>
-            </div>
-        );
-
-        const Cart = ({ selectedItems, removeItem, downloadICS, scheduleEvents }) => (
-            <div className="cart">
-                <h3>Selected Classes ({selectedItems.length})</h3>
-                <ul className="selected-list">
-                    {selectedItems.map(item => (
-                        <li key={item.code}>
-                            <span>{item.name} ({item.code})</span>
-                            <button className="btn-rm" onClick={() => removeItem(item.code)}>Remove</button>
-                        </li>
-                    ))}
-                </ul>
-                <div className="cart-controls">
-                    <button 
-                        className="btn-dl" 
-                        onClick={downloadICS} 
-                        disabled={selectedItems.length === 0}
-                    >
-                        Download .ICS File
-                    </button>
-                </div>
-                
-                <ScheduleView events={scheduleEvents} />
-            </div>
-        );
-
-        const ScheduleView = ({ events }) => {
-            const days = ['M', 'T', 'W', 'R', 'F', 'Finals'];
-            
-            // Group events by column
-            const columns = { M: [], T: [], W: [], R: [], F: [], Finals: [] };
-
-            events.forEach(ev => {
-                const startDate = new Date(ev.start);
-                const isFinal = ev.description === "Final Exam" || ev.title.includes("Final-");
-
-                if (isFinal) {
-                    columns['Finals'].push({ ...ev, startDate, isFinal: true });
-                    return;
-                }
-
-                if (ev.rrule && ev.rrule.includes("BYDAY=")) {
-                    const byDayPart = ev.rrule.split('BYDAY=')[1].split(';')[0]; // e.g., "MO,WE"
-                    const rruleDays = byDayPart.split(',');
-                    const dayMap = {"MO":"M", "TU":"T", "WE":"W", "TH":"R", "FR":"F"};
-                    
-                    rruleDays.forEach(d => {
-                        if (dayMap[d]) columns[dayMap[d]].push({ ...ev, startDate, isFinal: false });
-                    });
-                } else {
-                    const jsDay = startDate.getDay();
-                    const dayMap = {1: 'M', 2: 'T', 3: 'W', 4: 'R', 5: 'F'};
-                    if (dayMap[jsDay]) columns[dayMap[jsDay]].push({ ...ev, startDate, isFinal: false });
-                }
-            });
-
-            // Sort events by time within columns
-            Object.keys(columns).forEach(key => {
-                columns[key].sort((a, b) => a.start.localeCompare(b.start));
-            });
-
-            return (
-                <div className="schedule-view">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Monday</th>
-                                <th>Tuesday</th>
-                                <th>Wednesday</th>
-                                <th>Thursday</th>
-                                <th>Friday</th>
-                                <th>Finals</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                {days.map(day => (
-                                    <td key={day}>
-                                        {columns[day].map((ev, idx) => (
-                                            <EventCard key={idx} event={ev} />
-                                        ))}
-                                    </td>
-                                ))}
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            );
-        };
-
-        const EventCard = ({ event }) => {
-            let timeStr = "";
-            
-            if (event.duration) {
-                const [h, m] = event.duration.split(':').map(Number);
-                const endDate = new Date(event.startDate.getTime() + (h * 60 * 60 * 1000) + (m * 60 * 1000));
-                timeStr = `${formatTime(event.startDate)} - ${formatTime(endDate)}`;
-            } else if (event.end) {
-                timeStr = `${formatTime(event.startDate)} - ${formatTime(new Date(event.end))}`;
-            } else {
-                timeStr = formatTime(event.startDate);
-            }
-
-            return (
-                <div className={`event-card ${event.isFinal ? 'event-final' : ''}`}>
-                    <span className="event-time">{timeStr}</span>
-                    <strong>{event.title}</strong><br />
-                    <span className="event-loc">{event.location}</span>
-                    {event.isFinal && (
-                        <><br /><span style={{ fontSize: '0.8em', opacity: 0.9 }}>{event.startDate.toLocaleDateString()}</span></>
-                    )}
-                </div>
-            );
-        };
-
-        const SearchResults = ({ results, addItem }) => {
-            if (!results) return null;
-            if (results.length === 0) return <p>No results found.</p>;
-
-            return (
-                <div>
-                    {results.map((cls, idx) => (
-                        <div key={idx} className="result-item">
-                            <strong>{cls.courseId} - {cls.title}</strong><br />
-                            <span style={{ fontSize: '0.9em', opacity: 0.8 }}>
-                                Lecture: {cls.Days} {cls.BeginTime}-{cls.EndTime} ({cls.Building} {cls.Room})
-                            </span><br />
-                            
-                            {cls.classSections && cls.classSections.length > 0 ? (
-                                <>
-                                    <div style={{ marginTop: '5px', fontSize: '0.9em', opacity: 0.7 }}>Sections:</div>
-                                    {cls.classSections.map(sec => {
-                                        const t = sec.timeLocations[0];
-                                        const timeStr = t ? `${t.days} ${t.beginTime}-${t.endTime}` : "TBA";
-                                        return (
-                                            <div key={sec.enrollCode} className="section-item">
-                                                <span>{sec.enrollCode}: {timeStr}</span>
-                                                <button className="btn-add" onClick={() => addItem(sec.enrollCode, `${cls.courseId} Sec ${sec.enrollCode}`)}>Select</button>
-                                            </div>
-                                        );
-                                    })}
-                                </>
-                            ) : (
-                                cls.EnrollCode && (
-                                    <button className="btn-add" onClick={() => addItem(cls.EnrollCode, cls.courseId)}>Select Course</button>
-                                )
-                            )}
-                        </div>
-                    ))}
-                </div>
-            );
-        };
-
-        // --- Main App Component ---
-
         function App() {
             const [darkMode, setDarkMode] = useState(false);
-            const [query, setQuery] = useState("");
-            const [results, setResults] = useState(null);
             const [selectedItems, setSelectedItems] = useState([]);
             const [scheduleEvents, setScheduleEvents] = useState([]);
-            
-            // Theme Effect
+
+            // Theme Toggle Effect
             useEffect(() => {
                 if (darkMode) document.body.classList.add('dark-mode');
                 else document.body.classList.remove('dark-mode');
             }, [darkMode]);
 
-            // Debounced Search Effect
-            useEffect(() => {
-                const timer = setTimeout(async () => {
-                    if (query.trim() === "") {
-                        setResults(null);
-                        return;
-                    }
-                    try {
-                        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-                        if (res.ok) {
-                            const data = await res.json();
-                            setResults(data || []);
-                        }
-                    } catch (err) {
-                        console.error("Search failed", err);
-                    }
-                }, 300); // 300ms debounce
-
-                return () => clearTimeout(timer);
-            }, [query]);
-
-            // Update Calendar Preview Effect
+            // Calendar Data Fetching Effect
             useEffect(() => {
                 const fetchSchedule = async () => {
                     if (selectedItems.length === 0) {
@@ -425,29 +237,52 @@
                 fetchSchedule();
             }, [selectedItems]);
 
-            // Handlers
             const addItem = (code, name) => {
-                if (selectedItems.find(i => i.code === code)) return;
-                setSelectedItems(prev => [...prev, { code, name }]);
+                if (!selectedItems.find(i => i.code === code)) {
+                    setSelectedItems(prev => [...prev, { code, name }]);
+                }
             };
 
             const removeItem = (code) => {
                 setSelectedItems(prev => prev.filter(i => i.code !== code));
             };
 
+            return (
+                <div>
+                    <div className="header-controls">
+                        <h1>UCSB Calendar Generator (Winter 2026)</h1>
+                        <button className="theme-btn" onClick={() => setDarkMode(!darkMode)}>
+                            {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                        </button>
+                    </div>
+
+                    <Cart 
+                        selectedItems={selectedItems} 
+                        removeItem={removeItem} 
+                        scheduleEvents={scheduleEvents} 
+                        quarter={QUARTER}
+                    />
+                    
+                    <SearchBox addItem={addItem} />
+                </div>
+            );
+        }
+
+        // --- Cart Component ---
+        function Cart({ selectedItems, removeItem, scheduleEvents, quarter }) {
+            
             const downloadICS = async () => {
                 try {
                     const response = await fetch('/api/calendar', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            quarter: QUARTER,
+                            quarter: quarter,
                             enrollCodes: selectedItems.map(i => i.code)
                         })
                     });
-
                     if (!response.ok) throw new Error("Error generating calendar");
-
+                    
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -462,16 +297,128 @@
             };
 
             return (
-                <div>
-                    <Header darkMode={darkMode} toggleTheme={() => setDarkMode(!darkMode)} />
-                    
-                    <Cart 
-                        selectedItems={selectedItems} 
-                        removeItem={removeItem} 
-                        downloadICS={downloadICS}
-                        scheduleEvents={scheduleEvents}
-                    />
+                <div className="cart">
+                    <h3>Selected Classes (<span id="count">{selectedItems.length}</span>)</h3>
+                    <ul className="selected-list">
+                        {selectedItems.map(item => (
+                            <li key={item.code}>
+                                <span>{item.name} ({item.code})</span>
+                                <button className="btn-rm" onClick={() => removeItem(item.code)}>Remove</button>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="cart-controls">
+                        <button className="btn-dl" onClick={downloadICS} disabled={selectedItems.length === 0}>
+                            Download .ICS File
+                        </button>
+                    </div>
+                    <ScheduleGrid events={scheduleEvents} />
+                </div>
+            );
+        }
 
+        // --- Schedule Grid Component ---
+        function ScheduleGrid({ events }) {
+            const days = ['M', 'T', 'W', 'R', 'F', 'Finals'];
+            const columns = { M: [], T: [], W: [], R: [], F: [], Finals: [] };
+
+            // Sort events into columns
+            events.forEach(ev => {
+                const startDate = new Date(ev.start);
+                const isFinal = ev.description === "Final Exam" || ev.title.includes("Final-");
+
+                if (isFinal) {
+                    columns['Finals'].push({ ...ev, startDate, isFinal: true });
+                    return;
+                }
+
+                if (ev.rrule && ev.rrule.includes("BYDAY=")) {
+                    const byDayPart = ev.rrule.split('BYDAY=')[1].split(';')[0];
+                    const dayMap = {"MO":"M", "TU":"T", "WE":"W", "TH":"R", "FR":"F"};
+                    byDayPart.split(',').forEach(d => {
+                        if (dayMap[d]) columns[dayMap[d]].push({ ...ev, startDate, isFinal: false });
+                    });
+                } else {
+                    const dayMap = {1: 'M', 2: 'T', 3: 'W', 4: 'R', 5: 'F'};
+                    const key = dayMap[startDate.getDay()];
+                    if (key) columns[key].push({ ...ev, startDate, isFinal: false });
+                }
+            });
+
+            // Sort by time within columns
+            Object.keys(columns).forEach(k => {
+                columns[k].sort((a, b) => a.start.localeCompare(b.start));
+            });
+
+            return (
+                <div className="schedule-view">
+                    <table>
+                        <thead>
+                            <tr>{days.map(d => <th key={d}>{d === 'M' ? 'Monday' : d === 'T' ? 'Tuesday' : d === 'W' ? 'Wednesday' : d === 'R' ? 'Thursday' : d === 'F' ? 'Friday' : 'Finals'}</th>)}</tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                {days.map(day => (
+                                    <td key={day}>
+                                        {columns[day].map((ev, idx) => <EventCard key={idx} event={ev} />)}
+                                    </td>
+                                ))}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
+
+        // --- Event Card (Restored Layout) ---
+        function EventCard({ event }) {
+            let timeStr = "";
+            if (event.duration) {
+                const [h, m] = event.duration.split(':').map(Number);
+                const endDate = new Date(event.startDate.getTime() + (h * 60 * 60 * 1000) + (m * 60 * 1000));
+                timeStr = `${formatTime(event.startDate)} - ${formatTime(endDate)}`;
+            } else if (event.end) {
+                timeStr = `${formatTime(event.startDate)} - ${formatTime(new Date(event.end))}`;
+            } else {
+                timeStr = formatTime(event.startDate);
+            }
+
+            return (
+                <div className={`event-card ${event.isFinal ? 'event-final' : ''}`}>
+                    <span className="event-time">{timeStr}</span>
+                    <strong>{event.title}</strong><br />
+                    <span className="event-loc">{event.location}</span>
+                    {event.isFinal && (
+                        <><br /><span style={{ fontSize: '0.8em', opacity: 0.9 }}>{event.startDate.toLocaleDateString()}</span></>
+                    )}
+                </div>
+            );
+        }
+
+        // --- Search Box Component ---
+        function SearchBox({ addItem }) {
+            const [query, setQuery] = useState("");
+            const [results, setResults] = useState([]);
+
+            useEffect(() => {
+                const timer = setTimeout(async () => {
+                    if (query.trim() === "") {
+                        setResults([]);
+                        return;
+                    }
+                    try {
+                        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            setResults(data || []);
+                        }
+                    } catch (e) { console.error(e); }
+                }, 100); // 100ms debounce (restored original timing)
+                return () => clearTimeout(timer);
+            }, [query]);
+
+            return (
+                <div>
                     <div className="search-box">
                         <input 
                             type="text" 
@@ -480,8 +427,34 @@
                             onChange={(e) => setQuery(e.target.value)}
                         />
                     </div>
-
-                    <SearchResults results={results} addItem={addItem} />
+                    <div>
+                        {results.map((cls, idx) => (
+                            <div key={idx} className="result-item">
+                                <strong>{cls.courseId} - {cls.title}</strong><br/>
+                                <span style={{fontSize:'0.9em', opacity:0.8}}>
+                                    Lecture: {cls.Days} {cls.BeginTime}-{cls.EndTime} ({cls.Building} {cls.Room})
+                                </span><br/>
+                                
+                                {cls.classSections && cls.classSections.length > 0 ? (
+                                    <>
+                                        <div style={{marginTop:'5px', fontSize:'0.9em', opacity:0.7}}>Sections:</div>
+                                        {cls.classSections.map(sec => {
+                                            const t = sec.timeLocations && sec.timeLocations[0];
+                                            const timeStr = t ? `${t.days} ${t.beginTime}-${t.endTime}` : "TBA";
+                                            return (
+                                                <div key={sec.enrollCode} className="section-item">
+                                                    <span>{sec.enrollCode}: {timeStr}</span>
+                                                    <button className="btn-add" onClick={() => addItem(sec.enrollCode, `${cls.courseId} Sec ${sec.enrollCode}`)}>Select</button>
+                                                </div>
+                                            );
+                                        })}
+                                    </>
+                                ) : (
+                                    cls.EnrollCode && <button className="btn-add" onClick={() => addItem(cls.EnrollCode, cls.courseId)}>Select Course</button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         }
