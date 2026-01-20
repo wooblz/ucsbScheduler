@@ -11,7 +11,7 @@
 
     <style>
         :root {
-            /* DEFAULT: Light Mode */
+            /* def:lightmode*/
             --bg-color: #ffffff;
             --text-color: #000000;
             --container-bg: #f8f9fa;
@@ -33,7 +33,7 @@
         }
 
         body.dark-mode {
-            /* Dark Mode Overrides */
+            /* dark */
             --bg-color: #121212;
             --text-color: #e0e0e0;
             --container-bg: #1e1e1e;
@@ -194,7 +194,7 @@
         const { useState, useEffect } = React;
         const QUARTER = "20261";
 
-        // --- Helper: Format Dates for UI ---
+
         function formatTime(date) {
             return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         }
@@ -268,7 +268,6 @@
             );
         }
 
-        // --- Cart Component ---
         function Cart({ selectedItems, removeItem, scheduleEvents, quarter }) {
             
             const downloadICS = async () => {
@@ -317,7 +316,6 @@
             );
         }
 
-        // --- Schedule Grid Component ---
         function ScheduleGrid({ events }) {
             const days = ['M', 'T', 'W', 'R', 'F', 'Finals'];
             const columns = { M: [], T: [], W: [], R: [], F: [], Finals: [] };
@@ -370,7 +368,7 @@
             );
         }
 
-        // --- Event Card (Restored Layout) ---
+
         function EventCard({ event }) {
             let timeStr = "";
             if (event.duration) {
@@ -395,7 +393,7 @@
             );
         }
 
-        // --- Search Box Component ---
+      
         function SearchBox({ addItem }) {
             const [query, setQuery] = useState("");
             const [results, setResults] = useState([]);
@@ -413,7 +411,7 @@
                             setResults(data || []);
                         }
                     } catch (e) { console.error(e); }
-                }, 100); // 100ms debounce (restored original timing)
+                }, 100); 
                 return () => clearTimeout(timer);
             }, [query]);
 
