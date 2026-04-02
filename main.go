@@ -62,9 +62,7 @@ func main() {
 		refreshDatabase(db)
     }*/
 
-    if count == 0  {
-		refreshDatabase(db)
-	}
+	refreshDatabase(db)
 
 	go func() {
 		ticker := time.NewTicker(24 * time.Hour)
