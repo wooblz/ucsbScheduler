@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+    "time"
 
 	_ "github.com/lib/pq"
 	"github.com/wooblz/ucsbScheduler/models"
@@ -119,6 +120,10 @@ func ResetDB(db *sql.DB) error {
 }
 
 func QueryTitle(statement string, db *sql.DB) ([]models.Class, error) {
+    start := time.Now()
+    defer func() {
+        fmt.Printf("QueryTitle execution time: %v\n", time.Since(start))
+    }()
 	query_line, err := db.Prepare(`
         SELECT
             c.course_id,

@@ -122,7 +122,7 @@ func refreshDatabase(db *sql.DB) {
 	}
 
 	client := &http.Client{Timeout: 60 * time.Second}
-	courses, err := api.GetAllCourses(20261, client, "https://api.ucsb.edu/academics/curriculums/v3/classes/search")
+	courses, err := api.GetAllCourses(20262, client, "https://api.ucsb.edu/academics/curriculums/v3/classes/search")
 	if err != nil {
 		log.Println("Failed to fetch courses: ", err)
 		return
@@ -172,7 +172,7 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	quarterInt, err := strconv.Atoi(req.Quarter)
 	if err != nil {
-		quarterInt = 20261
+		quarterInt = 20262
 	}
 
 	var selectedClasses []models.Class
@@ -230,8 +230,8 @@ func getQuarterDates() (time.Time, time.Time, time.Time) {
 		loc = time.Local
 	}
 
-	start := time.Date(2026, 1, 5, 0, 0, 0, 0, loc)
-	instrEnd := time.Date(2026, 3, 13, 23, 59, 59, 0, loc)
-	qEnd := time.Date(2026, 3, 20, 23, 59, 59, 0, loc)
+    start := time.Date(2026, 3, 30, 0, 0, 0, 0, loc)
+    instrEnd := time.Date(2026, 6, 5, 23, 59, 59, 0, loc)
+    qEnd := time.Date(2026, 6, 12, 23, 59, 59, 0, loc)
 	return start, instrEnd, qEnd
 }

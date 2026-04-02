@@ -250,7 +250,7 @@
             return (
                 <div>
                     <div className="header-controls">
-                        <h1>UCSB Calendar Generator (Winter 2026)</h1>
+                        <h1>UCSB Calendar Generator (Spring 2026)</h1>
                         <button className="theme-btn" onClick={() => setDarkMode(!darkMode)}>
                             {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
                         </button>
@@ -262,7 +262,7 @@
                         scheduleEvents={scheduleEvents} 
                         quarter={QUARTER}
                     />
-                    
+                   <p style={{ fontSize: '0.8em', opacity: 0.7 }}>Note: Sorry for the late update for the Spring quarter.</p> 
                     <SearchBox addItem={addItem} />
                 </div>
             );
