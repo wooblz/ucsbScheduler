@@ -61,8 +61,10 @@ func main() {
 	if count == 0 || input == "Y" || input == "y" {
 		refreshDatabase(db)
     }*/
-
-	refreshDatabase(db)
+	if count == 1  {
+		refreshDatabase(db)
+	}
+		
 
 	go func() {
 		ticker := time.NewTicker(24 * time.Hour)
