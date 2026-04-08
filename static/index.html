@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCSB Scheduler</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            /* def:lightmode*/
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --container-bg: #f8f9fa;
+            --border-color: #ccc;
+            --accent-color: #007bff;
+            --item-bg: #ffffff;
+            --cart-bg: #f0f8ff;
+            --button-text: #fff;
+            --table-header-bg: #f8f9fa;
+            --table-cell-bg: #fff;
+            --input-bg: #fff;
+            --input-text: #000;
+            
+            --card-bg: #e3f2fd;
+            --card-border: #2196f3;
+            --card-text: #000;
+            --final-bg: #fff3cd;
+            --final-border: #ffc107;
+        }
+
+        body.dark-mode {
+            /* dark */
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --container-bg: #1e1e1e;
+            --border-color: #333;
+            --accent-color: #3788d8;
+            --item-bg: #2c2c2c;
+            --cart-bg: #1e2a36;
+            --button-text: #fff;
+            --table-header-bg: #252525;
+            --table-cell-bg: #181818;
+            --input-bg: #2c2c2c;
+            --input-text: #fff;
+
+            --card-bg: #0277bd;
+            --card-border: #4fc3f7;
+            --card-text: #fff;
+            --final-bg: #ff8f00;
+            --final-border: #ffb300;
+        }
+
+        body { 
+            font-family: sans-serif; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .theme-btn {
+            background: transparent;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        
+        .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
+        .search-box input { 
+            flex-grow: 1; 
+            padding: 8px; 
+            font-size: 16px; 
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        
+        .result-item { 
+            border: 1px solid var(--border-color); 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border-radius: 5px; 
+            background-color: var(--item-bg);
+        }
+        
+        .section-item { 
+            margin-left: 20px; 
+            padding: 5px; 
+            border-left: 2px solid var(--border-color); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
+        .cart { 
+            background: var(--cart-bg); 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 20px; 
+            border: 1px solid var(--border-color); 
+        }
+
+        .selected-list {
+            list-style: none;
+            padding: 0;
+        }
+        .selected-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .cart-controls { display: flex; gap: 10px; margin-top: 10px; }
+        
+        button { cursor: pointer; padding: 10px; border-radius: 5px; border: none; font-size: 14px; }
+        .btn-add { background: var(--accent-color); color: var(--button-text); padding: 5px 10px; }
+        
+        .btn-rm { 
+            background: #dc3545; 
+            color: white; 
+            padding: 2px 8px; 
+            font-size: 12px; 
+            margin-left: 10px;
+        }
+
+        .btn-dl { background: #28a745; color: white; width: 100%; font-size: 16px; }
+        .btn-dl:disabled { background: #555; cursor: not-allowed; }
+
+        /* Schedule Table Styles */
+        .schedule-view { margin-top: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 800px; }
+        
+        th, td { 
+            border: 1px solid var(--border-color); 
+            padding: 8px; 
+            text-align: left; 
+            vertical-align: top; 
+        }
+        th { 
+            background-color: var(--table-header-bg); 
+            text-align: center; 
+            padding: 12px; 
+            font-weight: bold; 
+            color: var(--text-color);
+        }
+        td { 
+            height: 150px; 
+            background: var(--table-cell-bg); 
+        }
+        
+        .event-card { 
+            background: var(--card-bg);
+            color: var(--card-text);
+            border-left: 4px solid var(--card-border); 
+            padding: 6px; 
+            margin-bottom: 6px; 
+            border-radius: 3px; 
+            font-size: 0.85em; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .event-final {
+            background: var(--final-bg);
+            border-left-color: var(--final-border);
+        }
+
+        .event-time { font-weight: bold; display: block; margin-bottom: 2px; }
+        .event-loc { font-size: 0.9em; opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const QUARTER = "20261";
+
+
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function App() {
+            const [darkMode, setDarkMode] = useState(false);
+            const [selectedItems, setSelectedItems] = useState([]);
+            const [scheduleEvents, setScheduleEvents] = useState([]);
+
+            // Theme Toggle Effect
+            useEffect(() => {
+                if (darkMode) document.body.classList.add('dark-mode');
+                else document.body.classList.remove('dark-mode');
+            }, [darkMode]);
+
+            // Calendar Data Fetching Effect
+            useEffect(() => {
+                const fetchSchedule = async () => {
+                    if (selectedItems.length === 0) {
+                        setScheduleEvents([]);
+                        return;
+                    }
+                    try {
+                        const response = await fetch('/api/calendar?format=preview', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                quarter: QUARTER,
+                                enrollCodes: selectedItems.map(i => i.code)
+                            })
+                        });
+                        if (response.ok) {
+                            const events = await response.json();
+                            setScheduleEvents(events || []);
+                        }
+                    } catch (e) {
+                        console.error("Error fetching schedule:", e);
+                    }
+                };
+                fetchSchedule();
+            }, [selectedItems]);
+
+            const addItem = (code, name) => {
+                if (!selectedItems.find(i => i.code === code)) {
+                    setSelectedItems(prev => [...prev, { code, name }]);
+                }
+            };
+
+            const removeItem = (code) => {
+                setSelectedItems(prev => prev.filter(i => i.code !== code));
+            };
+
+            return (
+                <div>
+                    <div className="header-controls">
+                        <h1>UCSB Calendar Generator (Spring 2026)</h1>
+                        <button className="theme-btn" onClick={() => setDarkMode(!darkMode)}>
+                            {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                        </button>
+                    </div>
+
+                    <Cart 
+                        selectedItems={selectedItems} 
+                        removeItem={removeItem} 
+                        scheduleEvents={scheduleEvents} 
+                        quarter={QUARTER}
+                    />
+                   <p style={{ fontSize: '0.8em', opacity: 0.7 }}>Note: Sorry for the late update for the Spring quarter.</p> 
+                    <SearchBox addItem={addItem} />
+                </div>
+            );
+        }
+
+        function Cart({ selectedItems, removeItem, scheduleEvents, quarter }) {
+            
+            const downloadICS = async () => {
+                try {
+                    const response = await fetch('/api/calendar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            quarter: quarter,
+                            enrollCodes: selectedItems.map(i => i.code)
+                        })
+                    });
+                    if (!response.ok) throw new Error("Error generating calendar");
+                    
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "schedule.ics";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } catch (e) {
+                    alert(e.message);
+                }
+            };
+
+            return (
+                <div className="cart">
+                    <h3>Selected Classes (<span id="count">{selectedItems.length}</span>)</h3>
+                    <ul className="selected-list">
+                        {selectedItems.map(item => (
+                            <li key={item.code}>
+                                <span>{item.name} ({item.code})</span>
+                                <button className="btn-rm" onClick={() => removeItem(item.code)}>Remove</button>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="cart-controls">
+                        <button className="btn-dl" onClick={downloadICS} disabled={selectedItems.length === 0}>
+                            Download .ICS File
+                        </button>
+                    </div>
+                    <ScheduleGrid events={scheduleEvents} />
+                </div>
+            );
+        }
+
+        function ScheduleGrid({ events }) {
+            const days = ['M', 'T', 'W', 'R', 'F', 'Finals'];
+            const columns = { M: [], T: [], W: [], R: [], F: [], Finals: [] };
+
+            // Sort events into columns
+            events.forEach(ev => {
+                const startDate = new Date(ev.start);
+                const isFinal = ev.description === "Final Exam" || ev.title.includes("Final-");
+
+                if (isFinal) {
+                    columns['Finals'].push({ ...ev, startDate, isFinal: true });
+                    return;
+                }
+
+                if (ev.rrule && ev.rrule.includes("BYDAY=")) {
+                    const byDayPart = ev.rrule.split('BYDAY=')[1].split(';')[0];
+                    const dayMap = {"MO":"M", "TU":"T", "WE":"W", "TH":"R", "FR":"F"};
+                    byDayPart.split(',').forEach(d => {
+                        if (dayMap[d]) columns[dayMap[d]].push({ ...ev, startDate, isFinal: false });
+                    });
+                } else {
+                    const dayMap = {1: 'M', 2: 'T', 3: 'W', 4: 'R', 5: 'F'};
+                    const key = dayMap[startDate.getDay()];
+                    if (key) columns[key].push({ ...ev, startDate, isFinal: false });
+                }
+            });
+
+            // Sort by time within columns
+            Object.keys(columns).forEach(k => {
+                columns[k].sort((a, b) => a.start.localeCompare(b.start));
+            });
+
+            return (
+                <div className="schedule-view">
+                    <table>
+                        <thead>
+                            <tr>{days.map(d => <th key={d}>{d === 'M' ? 'Monday' : d === 'T' ? 'Tuesday' : d === 'W' ? 'Wednesday' : d === 'R' ? 'Thursday' : d === 'F' ? 'Friday' : 'Finals'}</th>)}</tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                {days.map(day => (
+                                    <td key={day}>
+                                        {columns[day].map((ev, idx) => <EventCard key={idx} event={ev} />)}
+                                    </td>
+                                ))}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
+
+
+        function EventCard({ event }) {
+            let timeStr = "";
+            if (event.duration) {
+                const [h, m] = event.duration.split(':').map(Number);
+                const endDate = new Date(event.startDate.getTime() + (h * 60 * 60 * 1000) + (m * 60 * 1000));
+                timeStr = `${formatTime(event.startDate)} - ${formatTime(endDate)}`;
+            } else if (event.end) {
+                timeStr = `${formatTime(event.startDate)} - ${formatTime(new Date(event.end))}`;
+            } else {
+                timeStr = formatTime(event.startDate);
+            }
+
+            return (
+                <div className={`event-card ${event.isFinal ? 'event-final' : ''}`}>
+                    <span className="event-time">{timeStr}</span>
+                    <strong>{event.title}</strong><br />
+                    <span className="event-loc">{event.location}</span>
+                    {event.isFinal && (
+                        <><br /><span style={{ fontSize: '0.8em', opacity: 0.9 }}>{event.startDate.toLocaleDateString()}</span></>
+                    )}
+                </div>
+            );
+        }
+
+      
+        function SearchBox({ addItem }) {
+            const [query, setQuery] = useState("");
+            const [results, setResults] = useState([]);
+
+            useEffect(() => {
+                const timer = setTimeout(async () => {
+                    if (query.trim() === "") {
+                        setResults([]);
+                        return;
+                    }
+                    try {
+                        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            setResults(data || []);
+                        }
+                    } catch (e) { console.error(e); }
+                }, 100); 
+                return () => clearTimeout(timer);
+            }, [query]);
+
+            return (
+                <div>
+                    <div className="search-box">
+                        <input 
+                            type="text" 
+                            placeholder="Search (e.g. CMPSC 16)" 
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        {results.map((cls, idx) => (
+                            <div key={idx} className="result-item">
+                                <strong>{cls.courseId} - {cls.title}</strong><br/>
+                                <span style={{fontSize:'0.9em', opacity:0.8}}>
+                                    Lecture: {cls.Days} {cls.BeginTime}-{cls.EndTime} ({cls.Building} {cls.Room})
+                                </span><br/>
+                                
+                                {cls.classSections && cls.classSections.length > 0 ? (
+                                    <>
+                                        <div style={{marginTop:'5px', fontSize:'0.9em', opacity:0.7}}>Sections:</div>
+                                        {cls.classSections.map(sec => {
+                                            const t = sec.timeLocations && sec.timeLocations[0];
+                                            const timeStr = t ? `${t.days} ${t.beginTime}-${t.endTime}` : "TBA";
+                                            return (
+                                                <div key={sec.enrollCode} className="section-item">
+                                                    <span>{sec.enrollCode}: {timeStr}</span>
+                                                    <button className="btn-add" onClick={() => addItem(sec.enrollCode, `${cls.courseId} Sec ${sec.enrollCode}`)}>Select</button>
+                                                </div>
+                                            );
+                                        })}
+                                    </>
+                                ) : (
+                                    cls.EnrollCode && <button className="btn-add" onClick={() => addItem(cls.EnrollCode, cls.courseId)}>Select Course</button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
